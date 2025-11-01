@@ -166,8 +166,7 @@ src/
     rng_std/           (StdRng)
     config/            (ConfigLoader)
     log/               (Logger)
-  composition/
-    main.cpp
+  main.cpp
 tests/
   domain/, app/, infra/
 data/
