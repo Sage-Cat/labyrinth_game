@@ -1,0 +1,53 @@
+@startuml
+title "labyrinth – Layered Architecture"
+
+rectangle "Composition" as Composition {
+  component "main.cpp\n(wiring)" as Main
+}
+
+rectangle "Application" as App {
+  component "GameLoop" as GameLoop
+  component "UseCases\n(NewGame/Save/Load)" as UseCases
+  component "Systems\n- PlayerSystem\n- EnemyAISystem\n- CombatSystem\n- PickupSystem\n- WinLoseSystem" as Systems
+}
+
+rectangle "Domain" as Domain {
+  component "Entities\n(Player, Enemy, Item, Map, Tile...)" as Entities
+  component "Services\n(MapGen, LOS, Pathfinding,\nSpawnPolicy, WinLose, Damage)" as Services
+  component "Core\n(GameState, Value Types,\nRules, IRng)" as Core
+}
+
+rectangle "Infrastructure" as Infra {
+  component "ConsoleRenderer" as ConsoleRenderer
+  component "KeyboardInput" as KeyboardInput
+  component "FileSaveGameRepo" as FileSave
+  component "StdRng" as StdRng
+  component "Logger" as Logger
+  component "ConfigLoader (opt)" as Config
+}
+
+Main --> GameLoop
+Main --> UseCases
+Main --> ConsoleRenderer
+Main --> KeyboardInput
+Main --> FileSave
+Main --> StdRng
+Main --> Logger
+Main --> Config
+
+GameLoop --> Systems
+GameLoop --> ConsoleRenderer
+GameLoop --> KeyboardInput
+GameLoop --> FileSave : Save/Load
+
+Systems --> Entities
+Systems --> Services
+Systems --> Core
+
+UseCases --> Services
+UseCases --> Core
+UseCases --> FileSave
+
+Infra -[hidden]down- Domain
+Domain -[hidden]down- App
+@enduml

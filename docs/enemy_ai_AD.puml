@@ -1,0 +1,33 @@
+@startuml
+title "Activity – Enemy AI (concise)"
+
+start
+
+' If resting, check line of sight once
+if (State is Resting?) then (yes)
+  if (Has LOS to player?) then (yes)
+    :Set state to Chasing;
+  else (no)
+    :Idle (no action);
+    stop
+  endif
+endif
+
+' Chasing behavior
+if (State is Chasing?) then (yes)
+  if (Adjacent to player?) then (yes)
+    :Attack player;
+  else (no)
+    :Choose one-step path toward player;
+    if (Step available AND passable?) then (yes)
+      :Move one cell toward player;
+    else (no)
+      :Set state to Resting (lost target);
+    endif
+  endif
+else (no)
+  :Idle (no action);
+endif
+
+stop
+@enduml

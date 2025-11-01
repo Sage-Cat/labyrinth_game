@@ -1,0 +1,38 @@
+@startuml
+title "Sequence – One Tick of GameLoop"
+
+actor User
+participant KeyboardInput as In
+participant GameLoop as Loop
+participant PlayerSystem as PS
+participant EnemyAISystem as ES
+participant CombatSystem as CS
+participant PickupSystem as PU
+participant WinLoseSystem as WS
+participant ConsoleRenderer as R
+participant GameState as S
+
+User -> In : key press
+In --> Loop : InputCommand
+Loop -> PS : apply(InputCommand, S)
+PS --> Loop : updated S
+
+Loop -> ES : stepAI(S)
+ES --> Loop : intents/updates
+
+Loop -> CS : resolveCollisions(S)
+CS --> Loop : updated S
+
+Loop -> PU : processPickups(S)
+PU --> Loop : updated S
+
+Loop -> WS : check(S)
+WS --> Loop : victory/defeat flags
+
+alt not ended
+  Loop -> R : draw(S)
+  R --> Loop
+else ended
+  Loop -> R : draw end screen
+end
+@enduml

@@ -88,14 +88,13 @@ This is a concise architecture for a console roguelike in modern C++ (C++20), ST
 ---
 
 ## Application Layer (Use-Cases & Systems)
-- **InputCommand**: `{Move(dir), Wait, Save, Load, Quit}`.
 - **TurnSystem**:
   - **ActionSystem**: loop over actors starting for Player and trigger **ActorSystem** `action()`.
     - **ActorSystem**: base system for all actors 
-      - **PlayerSystem**: command → move/interaction (pickup, open exit).
+      - **PlayerSystem**: command → move/interaction (pickup, open exit). `action()` -> waits for user to press arrow key.
       - **EnemyAISystem**: chase if at least one LOS (Enemy state `resting` -> `chasing`); step or attack.
     - **CombatSystem**: resolve collisions as attacks. If player moves toward enemy, it's not a move, but attack.
-  - **PickupSystem**: 
+  - **ItemSystem**: 
     - if player moves on item cell -> collect item. 
     - if player reach state for autouse item -> autouse (no turn spend, but single per turn).
   - **WinLoseSystem**: check end state each turn/tick.

@@ -1,0 +1,148 @@
+@startuml
+title Domain Model – Core Types & Entities
+
+/' --- Enumerations --- '/
+enum Direction {
+  Up
+  Down
+  Left
+  Right
+}
+
+enum TileType {
+  Wall
+  Floor
+}
+
+enum EnemyState {
+  Resting
+  Chasing
+}
+
+/' --- Simple value objects --- '/
+class EntityId {
+  +value : uint32_t
+}
+
+class Position {
+  +x : uint8_t
+  +y : uint8_t
+}
+
+class Stats {
+  +hp : int
+  +max_hp : int
+  +atk : int
+  +def : int
+}
+
+class Glyph {
+  +ch : char
+}
+
+/' --- Tile / Map --- '/
+class GridTile
+
+class Tile {
+  +type : TileType
+  +blocks_movement : bool
+  +blocks_sight : bool
+}
+
+class Map {
+  +width() : uint16_t
+  +height() : uint16_t
+  +in_bounds(p: Position) : bool
+  +is_passable(p: Position) : bool
+  +is_transparent(p: Position) : bool
+  -tiles : GridTile[*]
+}
+
+/' --- Items & actors --- '/
+class Item {
+  +id : EntityId
+  +pos : Position
+  +kind : ItemKind
+  +value : int
+}
+
+class HealthPotion {
+  +healingValue : int
+}
+
+class Key {
+}
+
+abstract class Actor {
+  +id : uint32_t
+  +posX : int
+  +posY : int
+  #hp : int
+  {abstract} action() : void
+}
+
+class Player {
+  +has_key : bool
+  action() : void
+}
+
+class Enemy {
+  +state : EnemyState
+  action() : void
+}
+
+
+/' --- Ports / rules / state --- '/
+interface IRng {
+  +next_int(a:int, b:int) : int
+  +shuffle(list) : void
+}
+
+class GameRules {
+  +map_w : uint16_t
+  +map_h : uint16_t
+  +enemy_count : uint16_t
+  +potion_heal_max : int
+  +drop_rates_note : string
+}
+
+class GameState {
+  +map : Map
+  +actors : Actors[*]
+  +items : Item[*]
+  +turn : uint64_t
+  +victory : bool
+  +defeat : bool
+  +rules : GameRules
+  +rng : IRng
+  +score : int
+}
+
+/' --- Relations --- '/
+Map o-- GridTile : tiles
+Tile --> TileType
+Enemy --> EnemyState
+
+' inheritance
+Actor <|-- Player
+Actor <|-- Enemy
+
+Item <|-- HealthPotion
+Item <|-- Key
+
+' value-object ownership
+Actor *-- Position
+Actor *-- Stats
+Actor *-- Glyph
+Actor *-- EntityId
+Item   *-- EntityId
+Item   *-- Position
+
+' state composition (contains)
+GameState *-- Map
+GameState *-- "0..*" Actor
+GameState *-- "0..*" Item
+GameState *-- GameRules
+GameState --> IRng : depends on
+
+@enduml
