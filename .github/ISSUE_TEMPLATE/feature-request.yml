@@ -1,0 +1,67 @@
+name: Feature
+description: Request a feature for rogue_solo
+title: "[feature] <short summary>"
+labels: ["feature"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Domain
+        - Application
+        - Infrastructure
+        - Documentation
+        - Tests
+    validations:
+      required: true
+
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Difficulty (target)
+      description: Start with your guess; mentor may adjust.
+      options:
+        - easy
+        - medium
+        - hard
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Why
+      description: What user or developer problem are we solving?
+      placeholder: "Players can’t see line-of-sight; we need visibility rules."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal / Acceptance Criteria
+      description: Describe the behavior. Use bullet points as acceptance criteria.
+      placeholder: |
+        - Implement Bresenham LOS in Domain (no I/O)
+        - Unit tests: visible path, blocked path
+        - Integrate into Application system without I/O
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Out of Scope (optional)
+      placeholder: "Not part of this feature: FoV caching, fancy shaders, etc."
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-Submission Checks
+      options:
+        - label: I searched existing issues and PRs
+          required: true
+        - label: I understand this creates only the issue; implementation will be a separate PR
+          required: true
