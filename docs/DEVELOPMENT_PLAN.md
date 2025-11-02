@@ -342,7 +342,6 @@ A straight, step-by-step implementation order. Each step names the module(s) it'
 ### 40) Tag v1.0.0
 - Single binary, STL-only, deterministic tests, basic gameplay loop complete.
 
-
 ---
 
 ## 5. Testing Strategy
