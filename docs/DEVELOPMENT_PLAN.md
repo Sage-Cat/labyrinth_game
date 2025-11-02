@@ -53,7 +53,7 @@ This is a concise architecture for a console roguelike in modern C++ (C++20), ST
 - **Domain** — pure gameplay logic and data (no I/O).
 - **Application** — orchestrates domain via systems and use-cases.
 - **Infrastructure** — console I/O, persistence, config, RNG, clock, logging.
-- **Composition** — `main` wiring and dependency construction.
+- `main` - wiring and dependency construction (in the root of src/).
 
 ---
 
@@ -139,7 +139,7 @@ This is a concise architecture for a console roguelike in modern C++ (C++20), ST
 
 ---
 
-## Composition (Executable)
+## Main (executable)
 - **main.cpp**:
   - Parse `--seed`.
   - Construct adapters: `ConsoleRenderer`, `KeyboardInput`, `FileSaveGameRepo`, `StdRng`.
@@ -301,7 +301,7 @@ A straight, step-by-step implementation order. Each step names the module(s) it'
 - Sequence: read input → player system → enemy AI → combat → pickup → win/lose → render.
 - Exit on victory/defeat or `Quit`.
 
-### 30) Composition/Main (composition/main.cpp)
+### 30) Main (composition/main.cpp)
 - Parse `--seed` / `--load`.
 - Wire: `StdRng`, `ConsoleRenderer`, `KeyboardInput`, `FileSaveGameRepo`.
 - Start `NewGame` or `LoadGame`, run `GameLoop`.

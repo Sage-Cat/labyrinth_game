@@ -1,53 +1,96 @@
 @startuml
-title "labyrinth – Layered Architecture"
+title "labyrinth — Layers Component Diagram"
 
-rectangle "Composition" as Composition {
-  component "main.cpp\n(wiring)" as Main
+skinparam componentStyle rectangle
+skinparam rectangle {
+  RoundCorner 12
+  BorderColor #555
+}
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowColor #555
+skinparam packageTitleFontColor #222
+
+' ================== LAYERS ==================
+rectangle "Composition" as L_Composition {
+  component "main.cpp\n(wiring)" as C_Main
 }
 
-rectangle "Application" as App {
-  component "GameLoop" as GameLoop
-  component "UseCases\n(NewGame/Save/Load)" as UseCases
-  component "Systems\n- PlayerSystem\n- EnemyAISystem\n- CombatSystem\n- PickupSystem\n- WinLoseSystem" as Systems
+rectangle "Application" as L_App {
+  component "GameLoop" as C_GameLoop
+  component "UseCases\n- NewGame\n- SaveGame\n- LoadGame\n- ConfigLoad" as C_UseCases
+  component "Systems\n- PlayerSystem\n- EnemyAISystem\n- CombatSystem\n- PickupSystem\n- WinLoseSystem" as C_Systems
+  component "InputCommand\n(model)" as C_InputModel
 }
 
-rectangle "Domain" as Domain {
-  component "Entities\n(Player, Enemy, Item, Map, Tile...)" as Entities
-  component "Services\n(MapGen, LOS, Pathfinding,\nSpawnPolicy, WinLose, Damage)" as Services
-  component "Core\n(GameState, Value Types,\nRules, IRng)" as Core
+rectangle "Domain" as L_Domain {
+  component "Core\n- GameState\n- Value Types\n- Rules" as C_Core
+  component "Entities\n- Player\n- Enemy\n- Item\n- Map/Tile" as C_Entities
+  component "Services\n- MapGen\n- LOS\n- Pathfinding\n- SpawnPolicy\n- WinLose\n- Damage" as C_Services
+
+  interface "IRng" as I_Rng
+  interface "ISaveGameRepo" as I_SaveRepo
+  interface "IRenderer" as I_Renderer
+  interface "IInput" as I_Input
 }
 
-rectangle "Infrastructure" as Infra {
-  component "ConsoleRenderer" as ConsoleRenderer
-  component "KeyboardInput" as KeyboardInput
-  component "FileSaveGameRepo" as FileSave
-  component "StdRng" as StdRng
-  component "Logger" as Logger
-  component "ConfigLoader (opt)" as Config
+rectangle "Infrastructure" as L_Infra {
+  component "ConsoleRenderer" as C_ConsoleRenderer
+  component "KeyboardInput" as C_KeyboardInput
+  component "FileSaveGameRepo\n(text snapshot,\natomic write)" as C_FileRepo
+  component "StdRng\n(std::mt19937)" as C_StdRng
+  component "Logger" as C_Logger
+  component "ConfigLoader\n(optional)" as C_Config
 }
 
-Main --> GameLoop
-Main --> UseCases
-Main --> ConsoleRenderer
-Main --> KeyboardInput
-Main --> FileSave
-Main --> StdRng
-Main --> Logger
-Main --> Config
+' ================== DEPENDENCY RULES ==================
+' App depends inward on Domain (policies & state)
+C_GameLoop --> C_Core
+C_GameLoop --> C_Systems
+C_GameLoop --> C_UseCases
+C_UseCases --> C_Core
+C_Systems  --> C_Core
+C_Systems  --> C_Services
+C_Services --> C_Core
+C_Entities --> C_Core
 
-GameLoop --> Systems
-GameLoop --> ConsoleRenderer
-GameLoop --> KeyboardInput
-GameLoop --> FileSave : Save/Load
+' Ports (domain-facing interfaces) required by App
+C_GameLoop ..> I_Renderer : uses
+C_GameLoop ..> I_Input    : uses
+C_UseCases  ..> I_SaveRepo: uses
+C_Services  ..> I_Rng     : uses
 
-Systems --> Entities
-Systems --> Services
-Systems --> Core
+' Infra implements Domain ports (adapters)
+C_ConsoleRenderer ..|> I_Renderer
+C_KeyboardInput   ..|> I_Input
+C_FileRepo        ..|> I_SaveRepo
+C_StdRng          ..|> I_Rng
 
-UseCases --> Services
-UseCases --> Core
-UseCases --> FileSave
+' Composition wires everything together
+C_Main --> C_GameLoop
+C_Main --> C_UseCases
+C_Main --> C_Systems
+C_Main --> C_ConsoleRenderer
+C_Main --> C_KeyboardInput
+C_Main --> C_FileRepo
+C_Main --> C_StdRng
+C_Main --> C_Logger
+C_Main --> C_Config
 
-Infra -[hidden]down- Domain
-Domain -[hidden]down- App
+' Optional: show log/config used by app during boot / runtime
+C_GameLoop ..> C_Logger : logs
+C_UseCases  ..> C_Logger : logs
+C_UseCases  ..> C_Config : read settings
+
+' ================== NOTES ==================
+note bottom of L_Domain
+  Domain is pure (no I/O).
+  Ports (I*) live here so Infra depends inward.
+end note
+
+note bottom of L_Infra
+  Infra = adapters only. They implement Domain ports.
+  Safe to replace without touching Domain/App.
+end note
+
 @enduml
