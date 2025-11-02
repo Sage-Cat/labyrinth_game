@@ -114,7 +114,7 @@ This guide defines how we plan, split, implement, review, and ship the game toge
 
 ---
 
-## 20) License & Conduct
+## 11) License & Conduct
 
 - Be respectful, give constructive feedback.  
 - Ask questions early. We learn together.
