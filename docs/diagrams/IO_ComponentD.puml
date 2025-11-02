@@ -1,0 +1,33 @@
+@startuml
+title "Ports & Adapters – I/O Boundaries"
+
+package Domain {
+  interface IRenderer {
+    +draw(map: Map, entities, hud, log): void
+  }
+  interface IInput {
+    +poll(): InputCommand
+  }
+  interface ISaveGameRepo {
+    +save(state: GameState): Status 
+    +load(): Result<GameState>
+  }
+  interface IRng {
+    +next_int(a,b): int
+    +shuffle<T>(...): void
+  }
+}
+
+package Infrastructure {
+  class ConsoleRenderer
+  class KeyboardInput
+  class FileSaveGameRepo
+  class StdRng
+  class Logger
+}
+
+ConsoleRenderer ..|> IRenderer
+KeyboardInput ..|> IInput
+FileSaveGameRepo ..|> ISaveGameRepo
+StdRng ..|> IRng
+@enduml

@@ -1,0 +1,19 @@
+@startuml
+title "State Machine – Game Flow"
+
+[*] --> Menu
+Menu --> Playing : Start New
+Menu --> Playing : Load
+
+state Playing {
+  [*] --> Running
+  Running --> Victory : player on active exit
+  Running --> Defeat  : HP <= 0
+  Running --> Paused  : (optional)
+  Paused --> Running  : resume
+}
+
+Playing --> Menu : Quit
+Victory --> Menu : any key
+Defeat  --> Menu : any key
+@enduml
