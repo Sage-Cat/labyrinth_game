@@ -16,12 +16,24 @@
 
 namespace
 {
+    // === Exit codes kept in one place for clarity and tests ===
+    enum class ExitCode : int
+    {
+        Ok = 0,
+        LoadFailed = 10,
+        NewGameFailed = 11,
+        RuntimeError = 20,
+        UnhandledException = 70
+    };
+
     struct Cli
     {
         std::uint32_t seed = 123456789u;
         std::string load_path;
     };
 
+    // CLI attributes
+    // Example: ./build/bin/labyrinth --seed=123456789u --path=./data/saves/savefile1.txt
     Cli parse_cli(int argc, char **argv)
     {
         using std::string_view;
@@ -49,36 +61,57 @@ namespace
         }
         return cli;
     }
+
+int app_entry(int argc, char **argv) noexcept {
+    try {
+        const Cli cli = parse_cli(argc, argv);
+
+        // Domain setup
+        Domain::Rules::GameRules rules{};
+        Domain::Core::GameState state{};
+
+        // Adapters (infrastructure)
+        Infrastructure::RngStd::StdRng rng{cli.seed};
+        Infrastructure::IOConsole::ConsoleRenderer renderer{};
+        Infrastructure::IOConsole::KeyboardInput input{};
+        Infrastructure::PersistenceFile::FileSaveGameRepo repo{};
+
+        // Bootstrap world (use-cases)
+        bool boot_ok = false;
+        if (!cli.load_path.empty())
+        {
+            boot_ok = Application::Usecases::LoadGameUseCase::load(repo, state, cli.load_path);
+            if (!boot_ok) return static_cast<int>(ExitCode::LoadFailed);
+        }
+        else
+        {
+            boot_ok = Application::Usecases::NewGameUseCase::execute(state, rules, rng);
+            if (!boot_ok)
+                return static_cast<int>(ExitCode::NewGameFailed);
+        }
+
+        // Run loop (application)
+        Application::Loop::GameLoop loop{input, renderer};
+        const int rc = loop.run(state);
+        return rc;
+    }
+    catch (const std::bad_alloc &)
+    {
+        return static_cast<int>(ExitCode::RuntimeError);
+    }
+    catch (const std::exception &)
+    {
+        return static_cast<int>(ExitCode::UnhandledException);
+    }
+    catch (...)
+    {
+        return static_cast<int>(ExitCode::UnhandledException);
+    }
+}
+
 } // namespace
 
 int main(int argc, char **argv)
 {
-    const Cli cli = parse_cli(argc, argv);
-
-    // Domain setup
-    Domain::Rules::GameRules rules{};
-    Domain::Core::GameState state{};
-
-    // Adapters (infrastructure)
-    Infrastructure::RngStd::StdRng rng{cli.seed};
-    Infrastructure::IOConsole::ConsoleRenderer renderer{};
-    Infrastructure::IOConsole::KeyboardInput input{};
-    Infrastructure::PersistenceFile::FileSaveGameRepo repo{};
-
-    // Bootstrap world (use-cases)
-    if (!cli.load_path.empty())
-    {
-        (void)Application::Usecases::LoadGameUseCase::load(repo, state, cli.load_path);
-    }
-    else
-    {
-        (void)Application::Usecases::NewGameUseCase::execute(state, rules, rng);
-    }
-
-    // Run loop (application)
-    Application::Loop::GameLoop loop{input, renderer};
-    const int rc = loop.run(state);
-    (void)rc; // TODO: handle exit code
-
-    return 0;
+    return app_entry(argc, argv);
 }
