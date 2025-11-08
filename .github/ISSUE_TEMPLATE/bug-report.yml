@@ -70,13 +70,3 @@ body:
     attributes:
       label: Version / Commit
       placeholder: "main @ <commit-hash> or tag v0.x"
-
-  - type: checkboxes
-    id: checks
-    attributes:
-      label: Pre-Submission Checks
-      options:
-        - label: I searched existing issues and PRs
-          required: true
-        - label: I can reproduce on current main
-          required: false

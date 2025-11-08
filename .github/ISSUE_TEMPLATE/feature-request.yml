@@ -55,13 +55,3 @@ body:
     attributes:
       label: Out of Scope (optional)
       placeholder: "Not part of this feature: FoV caching, fancy shaders, etc."
-
-  - type: checkboxes
-    id: checks
-    attributes:
-      label: Pre-Submission Checks
-      options:
-        - label: I searched existing issues and PRs
-          required: true
-        - label: I understand this creates only the issue; implementation will be a separate PR
-          required: true
