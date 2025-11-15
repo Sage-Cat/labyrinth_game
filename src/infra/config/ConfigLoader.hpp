@@ -1,10 +1,10 @@
 #pragma once
 #include "domain/rules/GameRules.hpp"
 
-namespace Infrastructure::Config
-{
-    struct ConfigLoader
-    {
-        static Domain::Rules::GameRules load_default() { return Domain::Rules::GameRules{}; }
-    };
-}
+#include "app/usecases/IConfigLoader.hpp"
+
+namespace Infrastructure::Config {
+class ConfigLoader : public Application::Usecases::IConfigLoader {
+    Domain::Rules::GameRules load_rules() override;
+};
+} // namespace Infrastructure::Config
