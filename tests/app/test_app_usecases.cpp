@@ -8,6 +8,7 @@
 #include "domain/core/IRng.hpp"
 #include "domain/rules/GameRules.hpp"
 #include "domain/core/GameState.hpp"
+#include "app/usecases/ConfigLoadUseCase.hpp"
 
 struct DummyRng : Domain::Core::IRng
 {
@@ -21,15 +22,18 @@ struct DummyRepo : Application::Persistence::ISaveGameRepo
     bool load(Domain::Core::GameState &, const std::string &) override { return false; }
 };
 
+bool configload()
+{
+    auto rules = Application::Usecases::ConfigLoadUseCase::load_default();
+    return (rules.map_w == Domain::Rules::DEFAULT_RULES.map_w) &&
+           (rules.map_h == Domain::Rules::DEFAULT_RULES.map_h) &&
+           (rules.enemy_count == Domain::Rules::DEFAULT_RULES.enemy_count) &&
+           (rules.potion_heal_max == Domain::Rules::DEFAULT_RULES.potion_heal_max);
+}
+
 int main()
 {
-    Domain::Core::GameState st{};
-    Domain::Rules::GameRules rules{};
-    DummyRng rng{};
-    (void)Application::Usecases::NewGameUseCase::execute(st, rules, rng);
-
-    DummyRepo repo{};
-    (void)Application::Usecases::SaveGameUseCase::save(repo, st, "x.sav");
-    (void)Application::Usecases::LoadGameUseCase::load(repo, st, "x.sav");
+    if (!configload())
+        return EXIT_FAILURE;
     return EXIT_SUCCESS;
 }
