@@ -59,7 +59,7 @@ This is a concise architecture for a console roguelike in modern C++ (C++20), ST
 
 ## Domain Model (Entities & Value Types)
 - **EntityId**: `uint32_t` identifier.
-- **Position**: `{uint8_t x, uint8_t y}`.
+- **Position**: `{uint16_t x, uint16_t y}`.
 - **Direction**: enum `{Up, Down, Left, Right}`.
 - **Stats**: `{hp, max_hp, atk, def}`.
 - **Tile**: `{type: Wall|Floor, blocks_movement: bool, blocks_sight: bool}`.
