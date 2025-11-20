@@ -1,57 +1,22 @@
 name: Feature
-description: Request a feature for labyrinth_game
+description: Simple feature request for labyrinth_game
 title: "[feature] <short summary>"
 labels: ["feature"]
 body:
-  - type: dropdown
-    id: area
-    attributes:
-      label: Area
-      options:
-        - Domain
-        - Application
-        - Infrastructure
-        - Documentation
-        - Tests
-    validations:
-      required: true
-
-  - type: dropdown
-    id: difficulty
-    attributes:
-      label: Difficulty (target)
-      description: Start with your guess; mentor may adjust.
-      options:
-        - easy
-        - medium
-        - hard
-      default: 0
-    validations:
-      required: true
-
   - type: textarea
-    id: problem
+    id: description
     attributes:
-      label: Problem / Why
-      description: What user or developer problem are we solving?
-      placeholder: "Players can’t see line-of-sight; we need visibility rules."
-    validations:
-      required: true
-
-  - type: textarea
-    id: proposal
-    attributes:
-      label: Proposal / Acceptance Criteria
-      description: Describe the behavior. Use bullet points as acceptance criteria.
+      label: What should we add or change?
+      description: Describe the idea in simple words.
       placeholder: |
-        - Implement Bresenham LOS in Domain (no I/O)
-        - Unit tests: visible path, blocked path
-        - Integrate into Application system without I/O
+        Example:
+        - What you want: ...
+        - Why it is useful: ...
     validations:
       required: true
 
-  - type: textarea
-    id: scope
+  - type: input
+    id: task_id
     attributes:
-      label: Out of Scope (optional)
-      placeholder: "Not part of this feature: FoV caching, fancy shaders, etc."
+      label: Task ID in project (if any)
+      placeholder: "TASK-123 or issue #"
