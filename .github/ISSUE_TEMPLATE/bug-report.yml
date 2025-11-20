@@ -1,72 +1,23 @@
 name: Bug
-description: Report a bug in labyrinth_game
+description: Simple bug report for labyrinth_game
 title: "[bug] <short summary>"
 labels: ["bug"]
 body:
-  - type: dropdown
-    id: area
-    attributes:
-      label: Area
-      description: Where in the codebase is this bug?
-      options:
-        - Domain
-        - Application
-        - Infrastructure
-        - Documentation
-        - Tests
-    validations:
-      required: true
-
-  - type: dropdown
-    id: difficulty
-    attributes:
-      label: Difficulty (est.)
-      description: Mentor sets/adjusts after triage if needed.
-      options:
-        - easy
-        - medium
-        - hard
-      default: 0
-    validations:
-      required: true
-
   - type: textarea
-    id: steps
+    id: description
     attributes:
-      label: Steps to Reproduce
-      description: Be precise. If possible, include the map seed / save file.
+      label: What is the bug?
+      description: Explain in simple words what is wrong.
       placeholder: |
-        1) Build commit <hash> on branch <name>
-        2) Run the game
-        3) Press 'W' near a wall
-        4) ...
-    validations:
-      required: true
-
-  - type: textarea
-    id: expected
-    attributes:
-      label: Expected Result
-      placeholder: "Player should not move through walls."
-    validations:
-      required: true
-
-  - type: textarea
-    id: actual
-    attributes:
-      label: Actual Result
-      placeholder: "Player steps into wall tile at (x=…, y=…)."
+        Example:
+        - I did: ...
+        - I expected: ...
+        - I saw: ...
     validations:
       required: true
 
   - type: input
-    id: env
+    id: task_id
     attributes:
-      label: Environment
-      placeholder: "OS/Compiler/CMake version"
-
-  - type: input
-    id: version
-    attributes:
-      label: Version / Commit
-      placeholder: "main @ <commit-hash> or tag v0.x"
+      label: Task ID in project (if any)
+      placeholder: "TASK-123 or issue #"
