@@ -1,34 +1,10 @@
-## Summary
-Short, clear description of what this PR changes.
+## Description
+Short, simple text about what you changed.
 
-## Related Issue
-Link the issue: `Closes #<id>` (required)
-
-## Type
-Select one in the PR sidebar Labels (Type):
-- bug
-- feature
-
-## Area
-Select one in the PR sidebar Labels (Area):
-- Domain / Application / Infrastructure / Documentation / Tests
-
-## Difficulty (estimate)
-Select one in the PR sidebar Labels (Difficulty):
-- easy / medium / hard
-
-## What changed
-- Bullet points of key changes
-- Keep it short and focused
-
-## How to test (very simple steps)
-1. Build (cmake + build)
-2. Run the game or tests
-3. What to expect
+## Task ID in project
+Write the task or issue id (for example: `#12`).
 
 ## Checklist
-- [ ] I linked an issue with `Closes #<id>`
-- [ ] PR is focused (small scope)
-- [ ] Builds locally without errors
-- [ ] Tests updated/added (if applicable)
-- [ ] I selected **Type**, **Area**, **Difficulty** labels in the sidebar
+- [ ] I went to the project and linked this PR to the task.
+- [ ] I set assignee and reporter on the task.
+- [ ] I went to the team chat and asked for review.
