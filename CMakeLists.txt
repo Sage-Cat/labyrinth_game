@@ -1,59 +1,55 @@
-cmake_minimum_required(VERSION 3.20)
+# Build three static libs by layer:
+#   labyrinth_domain  (pure gameplay logic)
+#   labyrinth_app     (use-cases/systems; depends on domain)
+#   labyrinth_infra   (adapters; depends on app + domain)
 
-# ---- Project ----
-project(labyrinth
-  VERSION 0.1.0
-  LANGUAGES CXX)
-
-# ---- Options ----
-option(LABYRINTH_WARNINGS_AS_ERRORS "Treat warnings as errors" ON)
-option(LABYRINTH_ENABLE_SANITIZERS  "Enable ASan/UBSan (non-MSVC)" ON)
-option(LABYRINTH_BUILD_TESTS        "Build unit tests" ON)
-
-# ---- C++ standard ----
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-# ---- Output dirs ----
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
-# ---- Warnings ----
-if(MSVC)
-  add_compile_options(/W4 /permissive- /Zc:__cplusplus
-    $<$<BOOL:${LABYRINTH_WARNINGS_AS_ERRORS}>:/WX>)
-else()
-  add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wimplicit-fallthrough
-    $<$<BOOL:${LABYRINTH_WARNINGS_AS_ERRORS}>:-Werror>)
-endif()
-
-# ---- Sanitizers (non-MSVC) ----
-if(LABYRINTH_ENABLE_SANITIZERS AND NOT MSVC)
-  add_compile_options(-fsanitize=address,undefined)
-  add_link_options(-fsanitize=address,undefined)
-endif()
-
-# ---- Expose version to code ----
-add_compile_definitions(
-  LABYRINTH_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
-  LABYRINTH_VERSION_MINOR=${PROJECT_VERSION_MINOR}
-  LABYRINTH_VERSION_PATCH=${PROJECT_VERSION_PATCH}
-  LABYRINTH_VERSION_STRING="${PROJECT_VERSION}"
+# ---------- Domain ----------
+file(GLOB_RECURSE DOMAIN_SRC CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/domain/core/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/domain/core/*.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/domain/entities/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/domain/entities/*.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/domain/rules/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/domain/rules/*.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/domain/services/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/domain/services/*.hpp"
 )
+add_library(labyrinth_domain STATIC ${DOMAIN_SRC})
+target_include_directories(labyrinth_domain
+  PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${DOMAIN_SRC})
 
-# ---- Build layered libs ----
-add_subdirectory(src)
+#---------- Application ----------
+file(GLOB_RECURSE APP_SRC CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/app/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/app/*.hpp"
+)
+add_library(labyrinth_app STATIC ${APP_SRC})
+target_include_directories(labyrinth_app
+  PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+target_link_libraries(labyrinth_app
+  PUBLIC
+    labyrinth_domain
+)
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${APP_SRC})
 
-# ---- Executable (only main.cpp) ----
-add_executable(labyrinth src/main.cpp)
-# link: exe -> infra (adapters) + app (use-cases); domain comes transitively
-target_link_libraries(labyrinth PRIVATE labyrinth_infra labyrinth_app)
-
-# ---- Tests ----
-if(LABYRINTH_BUILD_TESTS)
-  enable_testing()
-  add_subdirectory(tests)
-endif()
-
+# ---------- Infrastructure ----------
+file(GLOB_RECURSE INFRA_SRC CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/infra/*.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/infra/*.hpp"
+)
+add_library(labyrinth_infra STATIC ${INFRA_SRC})
+target_include_directories(labyrinth_infra
+  PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+target_link_libraries(labyrinth_infra
+  PUBLIC
+    labyrinth_app
+    labyrinth_domain
+)
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${INFRA_SRC})
