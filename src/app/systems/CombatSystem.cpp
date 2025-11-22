@@ -1,9 +1,9 @@
 #include "app/systems/CombatSystem.hpp"
 #include "domain/core/GameState.hpp"
 
-namespace Application::Systems
+namespace Application::Systems {
+void CombatSystem::resolve(Domain::Core::GameState &)
 {
-    void CombatSystem::resolve(Domain::Core::GameState &) {
-        // TODO: resolve playerXenemy collision
-    }
+    // TODO: resolve playerXenemy collision
 }
+} // namespace Application::Systems

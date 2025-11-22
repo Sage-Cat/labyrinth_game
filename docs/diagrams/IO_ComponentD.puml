@@ -9,7 +9,7 @@ package Domain {
     +poll(): InputCommand
   }
   interface ISaveGameRepo {
-    +save(state: GameState): Status 
+    +save(state: GameState): Status
     +load(): Result<GameState>
   }
   interface IRng {

@@ -1,9 +1,9 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "domain/services/MapGen.hpp"
-#include "domain/rules/GameRules.hpp"
 #include "domain/entities/Map.hpp"
+#include "domain/rules/GameRules.hpp"
+#include "domain/services/MapGen.hpp"
 
 #include "dummy_rng.hpp"
 

@@ -1,5 +1,5 @@
-#include <cstdlib>
 #include "infra/log/Logger.hpp"
+#include <cstdlib>
 
 int main()
 {

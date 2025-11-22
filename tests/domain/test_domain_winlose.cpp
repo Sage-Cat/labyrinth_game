@@ -1,8 +1,8 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "domain/services/WinLosePolicy.hpp"
 #include "domain/core/GameState.hpp"
+#include "domain/services/WinLosePolicy.hpp"
 
 int main()
 {

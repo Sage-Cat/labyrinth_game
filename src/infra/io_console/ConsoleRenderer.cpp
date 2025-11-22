@@ -1,8 +1,8 @@
 #include "infra/io_console/ConsoleRenderer.hpp"
 
-namespace Infrastructure::IOConsole
+namespace Infrastructure::IOConsole {
+void ConsoleRenderer::draw(const Domain::Core::GameState &)
 {
-    void ConsoleRenderer::draw(const Domain::Core::GameState &) {
-        // TODO: draw game state in the console
-    }
+    // TODO: draw game state in the console
 }
+} // namespace Infrastructure::IOConsole
