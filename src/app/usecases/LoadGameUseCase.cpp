@@ -2,18 +2,16 @@
 #include "app/persistence/ISaveGameRepo.hpp"
 #include "domain/core/GameState.hpp"
 
-namespace Application::Usecases
+namespace Application::Usecases {
+bool LoadGameUseCase::load(Application::Persistence::ISaveGameRepo &repo,
+                           Domain::Core::GameState &state, const std::string &path)
 {
-    bool LoadGameUseCase::load(Application::Persistence::ISaveGameRepo &repo,
-                               Domain::Core::GameState &state,
-                               const std::string &path)
-    {
-        (void)repo;
-        (void)state;
-        (void)path;
-        
-        // TODO: load savefile
+    (void)repo;
+    (void)state;
+    (void)path;
 
-        return false;
-    }
+    // TODO: load savefile
+
+    return false;
 }
+} // namespace Application::Usecases

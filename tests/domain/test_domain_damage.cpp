@@ -1,8 +1,8 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "domain/services/DamageCalculator.hpp"
 #include "domain/core/Stats.hpp"
+#include "domain/services/DamageCalculator.hpp"
 
 int main()
 {

@@ -1,6 +1,6 @@
-#include <cstdlib>
-#include "infra/io_console/ConsoleRenderer.hpp"
 #include "domain/core/GameState.hpp"
+#include "infra/io_console/ConsoleRenderer.hpp"
+#include <cstdlib>
 
 int main()
 {

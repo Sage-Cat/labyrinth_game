@@ -1,6 +1,6 @@
-#include <cstdlib>
-#include <cassert>
 #include "infra/io_console/KeyboardInput.hpp"
+#include <cassert>
+#include <cstdlib>
 
 int main()
 {

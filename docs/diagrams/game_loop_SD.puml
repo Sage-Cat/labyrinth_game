@@ -15,24 +15,24 @@ participant GameState as S
 User -> In : key press
 In --> Loop : InputCommand
 Loop -> PS : apply(InputCommand, S)
-PS --> Loop : updated S
+  PS --> Loop : updated S
 
-Loop -> ES : stepAI(S)
-ES --> Loop : intents/updates
+  Loop -> ES : stepAI(S)
+    ES --> Loop : intents/updates
 
-Loop -> CS : resolveCollisions(S)
-CS --> Loop : updated S
+    Loop -> CS : resolveCollisions(S)
+      CS --> Loop : updated S
 
-Loop -> PU : processPickups(S)
-PU --> Loop : updated S
+      Loop -> PU : processPickups(S)
+        PU --> Loop : updated S
 
-Loop -> WS : check(S)
-WS --> Loop : victory/defeat flags
+        Loop -> WS : check(S)
+          WS --> Loop : victory/defeat flags
 
-alt not ended
-  Loop -> R : draw(S)
-  R --> Loop
-else ended
-  Loop -> R : draw end screen
-end
-@enduml
+          alt not ended
+            Loop -> R : draw(S)
+              R --> Loop
+            else ended
+              Loop -> R : draw end screen
+              end
+              @enduml

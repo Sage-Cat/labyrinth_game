@@ -1,6 +1,6 @@
+#include "infra/rng_std/StdRng.hpp"
 #include <cstdlib>
 #include <iostream>
-#include "infra/rng_std/StdRng.hpp"
 
 int main()
 {

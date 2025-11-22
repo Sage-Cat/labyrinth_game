@@ -1,10 +1,9 @@
 #include "app/systems/PlayerSystem.hpp"
 #include "domain/core/GameState.hpp"
 
-namespace Application::Systems
+namespace Application::Systems {
+void PlayerSystem::action(Domain::Core::GameState &)
 {
-    void PlayerSystem::action(Domain::Core::GameState &) 
-    {
-        // TODO: action for player (movement)
-    }
+    // TODO: action for player (movement)
 }
+} // namespace Application::Systems
