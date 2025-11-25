@@ -4,12 +4,17 @@
 namespace Domain::Entities {
 bool Map::is_passable(Domain::Core::Position p) const
 {
-    (void)p;
-    return false; // TODO: return if is passable
+    if (!in_bounds(p))
+        return false;
+    const auto &tile = tiles_.at(p.x, p.y);
+
+    return !tile.blocks_movement;
 }
 bool Map::is_transparent(Domain::Core::Position p) const
 {
-    (void)p;
-    return false; // TODO: return if is transparent (for LOS)
+    if (!in_bounds(p))
+        return false;
+    const auto &tile = tiles_.at(p.x, p.y);
+    return !tile.blocks_sight;
 }
 } // namespace Domain::Entities
