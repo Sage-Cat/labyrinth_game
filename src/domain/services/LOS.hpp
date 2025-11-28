@@ -7,7 +7,7 @@ class Map;
 
 namespace Domain::Services {
 struct LOS {
-    static bool can_see(const Domain::Entities::Map &map, Domain::Core::Position a,
-                        Domain::Core::Position b);
+    static bool can_see(const Domain::Entities::Map &map, const Domain::Core::Position &a,
+                        const Domain::Core::Position &b);
 };
 } // namespace Domain::Services
