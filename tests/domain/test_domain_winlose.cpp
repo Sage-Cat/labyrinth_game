@@ -5,43 +5,46 @@
 #include "domain/core/GameState.hpp"
 #include "domain/entities/actors/Player.hpp"
 
-bool testHpLessThanZero()
+[[nodiscard]] bool test_hp_less_than_zero()
 {
 Domain::Core::GameState state{};
 auto player = std::make_unique<Domain::Entities::Player>();
 player->stats.hp = -5;
 state.actors.push_back(std::move(player));
 Domain::Services::WinLosePolicy::evaluate(state);
-return state.defeat == true;
-std::cout << "[WinLose] defeat=" << state.defeat << "\n";
+
+return state.defeat; 
 }
 
-bool testHpEquelZero()
+[[nodiscard]] bool test_hp_equel_zero()
 {
-Domain::Core::GameState state{};
-auto player = std::make_unique<Domain::Entities::Player>();
-player->stats.hp = 0;
-state.actors.push_back(std::move(player));
-Domain::Services::WinLosePolicy::evaluate(state);
-return state.defeat == true;
-std::cout << "[WinLose] defeat=" << state.defeat << "\n";
-}
+    Domain::Core::GameState state{};  
+    auto player = std::make_unique<Domain::Entities::Player>();  
+    player->stats.hp = 0;  
+    state.actors.push_back(std::move(player));  
 
-bool testHpGreaterThanZero()
-{
-Domain::Core::GameState state{};
-auto player = std::make_unique<Domain::Entities::Player>();
-player->stats.hp = 5;
-state.actors.push_back(std::move(player));
-Domain::Services::WinLosePolicy::evaluate(state);
-return state.defeat == false;
+    Domain::Services::WinLosePolicy::evaluate(state);  
 
-}
+    return state.defeat;
+}  
+
+[[nodiscard]] bool test_hp_greater_than_zero()  
+{  
+    Domain::Core::GameState state{};  
+    auto player = std::make_unique<Domain::Entities::Player>();  
+    player->stats.hp = 5;  
+    state.actors.push_back(std::move(player));  
+
+    Domain::Services::WinLosePolicy::evaluate(state);  
+
+    return !state.defeat;  
+}  
 int main()
 {
-   if(testHpLessThanZero() && testHpEquelZero() && testHpGreaterThanZero())
-    return EXIT_SUCCESS;
-    else 
-    return EXIT_FAILURE;
+  const bool all_passed = test_hp_less_than_zero()  
+                         && test_hp_equel_zero()  
+                         && test_hp_greater_than_zero();  
+
+    return all_passed ? EXIT_SUCCESS : EXIT_FAILURE; 
 
 }
