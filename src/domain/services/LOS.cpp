@@ -25,8 +25,8 @@ bool LOS::can_see(const Domain::Entities::Map &map, const Domain::Core::Position
 
     while (true) {
 
-        Domain::Core::Position current_pos{static_cast<std::uint8_t>(x0),
-                                           static_cast<std::uint8_t>(y0)};
+        Domain::Core::Position current_pos{static_cast<std::uint16_t>(x0),
+                                           static_cast<std::uint16_t>(y0)};
         if (!map.is_transparent(current_pos))
             return false;
 

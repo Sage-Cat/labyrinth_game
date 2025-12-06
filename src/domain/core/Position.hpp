@@ -3,7 +3,7 @@
 
 namespace Domain::Core {
 struct Position {
-    std::uint8_t x{};
-    std::uint8_t y{};
+    std::uint16_t x{};
+    std::uint16_t y{};
 };
 } // namespace Domain::Core
