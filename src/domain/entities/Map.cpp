@@ -7,6 +7,7 @@ bool Map::is_passable(Domain::Core::Position p) const
     (void)p;
     return false; // TODO: return if is passable
 }
+
 bool Map::is_transparent(Domain::Core::Position p) const
 {
     if (!in_bounds(p))

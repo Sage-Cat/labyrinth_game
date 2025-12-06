@@ -1,4 +1,4 @@
-# Collect root-level tests (e.g., test_sanity.cpp)
+# ---- Root tests ----
 file(GLOB ROOT_TESTS CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
 )
@@ -7,10 +7,11 @@ foreach(t ${ROOT_TESTS})
   get_filename_component(name "${t}" NAME_WE)
   add_executable(${name} ${t})
   target_link_libraries(${name} PRIVATE labyrinth_domain)
+  target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includes)
   add_test(NAME ${name} COMMAND ${name})
 endforeach()
 
-# Collect domain tests under tests/domain/*.cpp
+# ---- Domain tests ----
 file(GLOB DOMAIN_TESTS CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/domain/*.cpp"
 )
@@ -19,6 +20,7 @@ foreach(t ${DOMAIN_TESTS})
   get_filename_component(name "${t}" NAME_WE)
   add_executable(${name} ${t})
   target_link_libraries(${name} PRIVATE labyrinth_domain)
+  target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includes)
   add_test(NAME ${name} COMMAND ${name})
 endforeach()
 
@@ -30,8 +32,8 @@ file(GLOB INFRA_TESTS CONFIGURE_DEPENDS
 foreach(t ${INFRA_TESTS})
   get_filename_component(name "${t}" NAME_WE)
   add_executable(${name} ${t})
-  # Infra depends on app + domain; link infra to pull both
   target_link_libraries(${name} PRIVATE labyrinth_infra)
+  target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includes)
   add_test(NAME ${name} COMMAND ${name})
 endforeach()
 
@@ -43,5 +45,6 @@ foreach(t ${APP_TESTS})
   get_filename_component(name "${t}" NAME_WE)
   add_executable(${name} ${t})
   target_link_libraries(${name} PRIVATE labyrinth_app)
+  target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includes)
   add_test(NAME ${name} COMMAND ${name})
 endforeach()
