@@ -4,6 +4,7 @@
 #include "domain/core/Position.hpp"
 #include "domain/entities/Map.hpp"
 #include "domain/services/LOS.hpp"
+
 #include "test_utils.hpp"
 
 namespace {

@@ -25,8 +25,8 @@ class EntityId {
 }
 
 class Position {
-  +x : uint8_t
-  +y : uint8_t
+  +x : uint16_t
+  +y : uint16_t
 }
 
 class Stats {
