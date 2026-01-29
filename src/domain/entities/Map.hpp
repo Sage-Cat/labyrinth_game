@@ -26,6 +26,8 @@ public:
     GridTile &grid() { return tiles_; }
     const GridTile &grid() const { return tiles_; }
 
+    [[nodiscard]] bool set_passable(Domain::Core::Position p, bool passable);
+
 private:
     GridTile tiles_{};
 };
