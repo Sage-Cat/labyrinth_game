@@ -5,6 +5,8 @@
 #include "domain/rules/GameRules.hpp"
 #include "domain/services/MapGenHelpers.hpp"
 
+#include "infra/log/Logger.hpp"
+
 #include <algorithm>
 #include <cstdint>
 #include <vector>
@@ -37,20 +39,26 @@ void MapGen::generate(const GameRules &rules, IRng &rng, Map &map)
 {
     // Dungeon generation theory https://github.com/Sage-Cat/labyrinth_game/wiki/MapGen-theory
 
+    LOG(INFO) << "MapGen::generate started";
     // 1) Determine map size (with a minimal safety clamp).
     const auto width  = clamp_size(rules.map_w);
     const auto height = clamp_size(rules.map_h);
 
+    LOG(INFO) << "MapGen: map size set to " << width << "x" << height;
     // Recreate the map with requested size.
     map = Map{width, height};
 
     // 2) Fill everything with walls.
     fill_with_walls(map);
+    LOG(DEBUG) << "MapGen: map filled with walls";
 
     // MapGen parameters (expected in GameRules).
     const std::uint16_t max_rooms     = rules.max_rooms;
     const std::uint16_t room_min_size = rules.room_min_size;
     const std::uint16_t room_max_size = rules.room_max_size;
+
+    LOG(INFO) << "MapGen: max_rooms=" << max_rooms << " room_min_size=" << room_min_size
+              << " room_max_size=" << room_max_size;
 
     std::vector<Room> rooms;
     rooms.reserve(max_rooms);
@@ -62,6 +70,7 @@ void MapGen::generate(const GameRules &rules, IRng &rng, Map &map)
 
         // Skip if room is too large for this map.
         if (room_w >= width - 2 || room_h >= height - 2) {
+            LOG(DEBUG) << "MapGen: skipped room (too large for map)";
             continue;
         }
 
@@ -70,6 +79,7 @@ void MapGen::generate(const GameRules &rules, IRng &rng, Map &map)
 
         if (max_x <= 1 || max_y <= 1) {
             // Map is too small for additional rooms.
+            LOG(INFO) << "MapGen: map too small for more rooms, stopping";
             break;
         }
 
@@ -87,11 +97,14 @@ void MapGen::generate(const GameRules &rules, IRng &rng, Map &map)
         }
 
         if (overlaps) {
+            LOG(DEBUG) << "MapGen: skipped overlapping room";
             continue;
         }
 
         // 4) Carve the room.
         carve_room(map, new_room);
+        LOG(DEBUG) << "MapGen: carved room at (" << x << "," << y << ") size " << room_w << "x"
+                   << room_h;
 
         // 5) Connect to previous room with a corridor.
         if (!rooms.empty()) {
@@ -115,6 +128,7 @@ void MapGen::generate(const GameRules &rules, IRng &rng, Map &map)
                                static_cast<std::uint16_t>(new_center.x),
                                static_cast<std::uint16_t>(new_center.y));
             }
+            LOG(DEBUG) << "MapGen: corridor carved between rooms";
         }
 
         rooms.push_back(new_room);
@@ -122,6 +136,10 @@ void MapGen::generate(const GameRules &rules, IRng &rng, Map &map)
 
     // 6) Ensure outer border is solid walls.
     enforce_border_walls(map);
+
+    LOG(DEBUG) << "MapGen: enforced border walls";
+
+    LOG(INFO) << "MapGen::generate finished, rooms placed: " << rooms.size();
 }
 
 } // namespace Domain::Services
