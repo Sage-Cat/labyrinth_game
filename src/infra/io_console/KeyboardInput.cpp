@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -213,9 +214,15 @@ namespace
 KeyboardInput::KeyboardInput()
 {
 #if defined(__linux__) || defined(__APPLE__)
-    raw_mode_enabled_ = enable_raw_mode();
-    if (raw_mode_enabled_) {
-        LOG(INFO) << "KeyboardInput: raw mode enabled";
+    const char *disable_raw = std::getenv("LABYRINTH_DISABLE_RAW_INPUT");
+    if (disable_raw != nullptr && std::string(disable_raw) == "1") {
+        raw_mode_enabled_ = false;
+        LOG(INFO) << "KeyboardInput: raw mode disabled by LABYRINTH_DISABLE_RAW_INPUT=1";
+    } else {
+        raw_mode_enabled_ = enable_raw_mode();
+        if (raw_mode_enabled_) {
+            LOG(INFO) << "KeyboardInput: raw mode enabled";
+        }
     }
 #endif
 }
@@ -237,12 +244,16 @@ std::optional<Application::Loop::InputCommand> KeyboardInput::poll()
         return std::nullopt;
     }
 
-    if (stdin_is_tty()) {
+    if (stdin_is_tty() && raw_mode_enabled_) {
 #if defined(__linux__) || defined(__APPLE__) || defined(_WIN32)
         return parse_tty_key();
 #else
         return std::nullopt;
 #endif
+    }
+
+    if (std::cin.rdbuf()->in_avail() <= 0) {
+        return std::nullopt;
     }
 
     std::string line;
