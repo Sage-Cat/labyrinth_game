@@ -4,6 +4,8 @@
 #include "domain/entities/Map.hpp"
 #include "domain/entities/Tile.hpp"
 
+#include "infra/log/Logger.hpp"
+
 #include <algorithm>
 
 namespace Domain::Services::MapGenDetail {
@@ -29,6 +31,8 @@ bool Room::intersects(const Room &other) const noexcept
 
 void fill_with_walls(Map &map) noexcept
 {
+    LOG(DEBUG) << "MapGenHelpers: filling map with walls";
+
     for (std::size_t y = 0; y < map.height(); ++y) {
         for (std::size_t x = 0; x < map.width(); ++x) {
             auto &tile           = map.grid().at(x, y);
@@ -41,6 +45,9 @@ void fill_with_walls(Map &map) noexcept
 
 void carve_room(Map &map, const Room &room) noexcept
 {
+    LOG(DEBUG) << "MapGenHelpers: carving room at (" << room.x << "," << room.y << ") size "
+               << room.w << "x" << room.h;
+
     const auto max_x = std::min<std::uint16_t>(static_cast<std::uint16_t>(room.x + room.w),
                                                static_cast<std::uint16_t>(map.width()));
     const auto max_y = std::min<std::uint16_t>(static_cast<std::uint16_t>(room.y + room.h),
@@ -59,6 +66,7 @@ void carve_room(Map &map, const Room &room) noexcept
 void carve_h_tunnel(Map &map, std::uint16_t x1, std::uint16_t x2, std::uint16_t y) noexcept
 {
     if (map.height() == 0 || map.width() == 0) {
+        LOG(DEBUG) << "MapGenHelpers: skipped horizontal tunnel (empty map)";
         return;
     }
 
@@ -69,6 +77,9 @@ void carve_h_tunnel(Map &map, std::uint16_t x1, std::uint16_t x2, std::uint16_t 
     x1 = std::min<std::uint16_t>(x1, static_cast<std::uint16_t>(map.width() - 1));
     x2 = std::min<std::uint16_t>(x2, static_cast<std::uint16_t>(map.width() - 1));
     y  = std::min<std::uint16_t>(y, static_cast<std::uint16_t>(map.height() - 1));
+
+    LOG(DEBUG) << "MapGenHelpers: carving horizontal tunnel from x=" << x1 << " to x=" << x2
+               << " at y=" << y;
 
     for (std::uint16_t x = x1; x <= x2; ++x) {
         auto &tile           = map.grid().at(x, y);
@@ -81,6 +92,7 @@ void carve_h_tunnel(Map &map, std::uint16_t x1, std::uint16_t x2, std::uint16_t 
 void carve_v_tunnel(Map &map, std::uint16_t y1, std::uint16_t y2, std::uint16_t x) noexcept
 {
     if (map.height() == 0 || map.width() == 0) {
+        LOG(DEBUG) << "MapGenHelpers: skipped vertical tunnel (empty map)";
         return;
     }
 
@@ -91,6 +103,9 @@ void carve_v_tunnel(Map &map, std::uint16_t y1, std::uint16_t y2, std::uint16_t 
     x  = std::min<std::uint16_t>(x, static_cast<std::uint16_t>(map.width() - 1));
     y1 = std::min<std::uint16_t>(y1, static_cast<std::uint16_t>(map.height() - 1));
     y2 = std::min<std::uint16_t>(y2, static_cast<std::uint16_t>(map.height() - 1));
+
+    LOG(DEBUG) << "MapGenHelpers: carving vertical tunnel from y=" << y1 << " to y=" << y2
+               << " at x=" << x;
 
     for (std::uint16_t y = y1; y <= y2; ++y) {
         auto &tile           = map.grid().at(x, y);
@@ -106,8 +121,11 @@ void enforce_border_walls(Map &map) noexcept
     const auto h = map.height();
 
     if (w == 0 || h == 0) {
+        LOG(DEBUG) << "MapGenHelpers: skipped border walls (empty map)";
         return;
     }
+
+    LOG(DEBUG) << "MapGenHelpers: enforcing border walls";
 
     // Top and bottom rows.
     for (std::size_t x = 0; x < w; ++x) {

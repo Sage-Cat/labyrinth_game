@@ -1,7 +1,11 @@
 #include "infra/rng_std/StdRng.hpp"
+#include "infra/log/Logger.hpp"
 
 namespace Infrastructure::RngStd {
-StdRng::StdRng(std::uint32_t seed) : engine_{seed} {}
+StdRng::StdRng(std::uint32_t seed) : engine_{seed}
+{
+    LOG(TRACE) << "StdRng initialized with seed " << seed;
+}
 
 std::uint32_t StdRng::next_u32()
 {

@@ -12,6 +12,7 @@
 
 #include "infra/io_console/ConsoleRenderer.hpp"
 #include "infra/io_console/KeyboardInput.hpp"
+#include "infra/log/Logger.hpp"
 #include "infra/persistence_file/FileSaveGameRepo.hpp"
 #include "infra/rng_std/StdRng.hpp"
 
@@ -55,6 +56,9 @@ Cli parse_cli(int argc, char **argv)
 
 int app_entry(int argc, char **argv) noexcept
 {
+    Infrastructure::Log::Logger::instance().init_file("labyrinth.log");
+
+    LOG(INFO) << "Game Labyrinth started";
     try {
         const Cli cli = parse_cli(argc, argv);
 
@@ -84,12 +88,17 @@ int app_entry(int argc, char **argv) noexcept
         // Run loop (application)
         Application::Loop::GameLoop loop{input, renderer};
         const int rc = loop.run(state);
+
+        LOG(INFO) << "Game loop exited with code " << rc;
         return rc;
     } catch (const std::bad_alloc &) {
+        LOG(ERROR) << "Runtime error: out of memory";
         return static_cast<int>(ExitCode::RuntimeError);
     } catch (const std::exception &) {
+        LOG(ERROR) << "Unhandled exception caught";
         return static_cast<int>(ExitCode::UnhandledException);
     } catch (...) {
+        LOG(ERROR) << "Unhandled non-standard exception caught";
         return static_cast<int>(ExitCode::UnhandledException);
     }
 }
