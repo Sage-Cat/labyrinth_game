@@ -10,6 +10,7 @@
 #include "domain/entities/Tile.hpp"
 #include "domain/entities/actors/Actor.hpp"
 #include "domain/entities/items/Item.hpp"
+#include "domain/entities/items/Key.hpp"
 
 #include "infra/io_console/ConsoleRenderer.hpp"
 #include "test_utils.hpp"
@@ -33,8 +34,6 @@ using TestUtils::fail_count;
 struct TestEnemy final : public Actor {
     void action(GameState &) override {}
 };
-
-struct TestItem final : public Item {};
 
 void fill_floor(Map &map)
 {
@@ -80,7 +79,7 @@ int main()
 
     // Item at (3,1)
     {
-        auto it = std::make_unique<TestItem>();
+        auto it = std::make_unique<Domain::Entities::Key>();
         it->pos = Position{3, 1};
         state.items.push_back(std::move(it));
     }
@@ -102,14 +101,15 @@ int main()
 
     expect(!out.empty(), "ConsoleRenderer produces output");
     expect(out.find("Turn: 42") != std::string::npos, "HUD contains turn");
-    expect(out.find("Score: 7") != std::string::npos, "HUD contains score");
+    expect(out.find("Actors: 2") != std::string::npos, "HUD contains actor count");
+    expect(out.find("Items: 1") != std::string::npos, "HUD contains item count");
 
     // ASCII symbols should appear
-    expect(out.find("#") != std::string::npos, "Wall (#) present");
-    expect(out.find(" ") != std::string::npos, "Floor (.) present");
+    expect(out.find("##") != std::string::npos, "Wall (##) present");
+    expect(out.find("..") != std::string::npos, "Floor (..) present");
     expect(out.find("@") != std::string::npos, "Player (@) present");
     expect(out.find("E") != std::string::npos, "Enemy (E) present");
-    expect(out.find("*") != std::string::npos, "Item (*) present");
+    expect(out.find("K") != std::string::npos, "Key (K) present");
 
     return fail_count == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
