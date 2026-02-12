@@ -17,30 +17,6 @@ using TestUtils::fail_count;
 } // namespace
 
 
-
-#include "test_utils.hpp"
-
-namespace {
-using Domain::Core::Position;
-using Domain::Entities::Map;
-using Domain::Entities::TileType;
-using Domain::Services::LOS;
-using TestUtils::expect;
-using TestUtils::fail_count;
-} // namespace
-
-void reset_map(Map &map)
-{
-    for (std::size_t x = 0; x < map.width(); ++x) {
-        for (std::size_t y = 0; y < map.height(); ++y) {
-            auto &tile           = map.grid().at(x, y);
-            tile.type            = TileType::Floor;
-            tile.blocks_sight    = false;
-            tile.blocks_movement = false;
-        }
-    }
-}
-
 int main()
 {
     Map map{20, 20};

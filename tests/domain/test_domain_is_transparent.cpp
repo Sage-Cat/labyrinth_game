@@ -1,4 +1,3 @@
-
 #include "../includes/test_utils.hpp"
 #include "domain/core/Position.hpp"
 #include "domain/entities/Map.hpp"
@@ -8,6 +7,7 @@
 int main()
 {
     Domain::Entities::Map map{10, 10};
+    TestUtils::reset_map(map);
 
     //In-bounds Wall
     TestUtils::expect(map.set_transparent({5, 5}, false), "Setting wall should be succeed");
@@ -20,5 +20,6 @@ int main()
     //Out-of-bounds
     TestUtils::expect(!map.is_transparent({10, 10}), "Out-of-bounds");
 
+    TestUtils::reset_map(map);
     return TestUtils::fail_count == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

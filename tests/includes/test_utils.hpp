@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include "domain/entities/Map.hpp"
 
 namespace TestUtils {
 
