@@ -1,21 +1,23 @@
 #pragma once
-
 #include "app/loop/IRenderer.hpp"
 #include "infra/io_console/SymbolSet.hpp"
 
-namespace Infrastructure::IOConsole {
+namespace Infrastructure::IOConsole
+{
+    class ConsoleRenderer final : public Application::Loop::IRenderer
+    {
+    public:
+        explicit ConsoleRenderer(SymbolSetId symbols_id = SymbolSetId::Ascii)
+            : symbols_id_(symbols_id)
+        {
+        }
 
-class ConsoleRenderer final : public Application::Loop::IRenderer {
-public:
-    ConsoleRenderer() = default;
-    explicit ConsoleRenderer(SymbolSetId id) : symbols_id_(id) {}
+        void set_symbol_set(SymbolSetId symbols_id) { symbols_id_ = symbols_id; }
+        SymbolSetId symbol_set() const { return symbols_id_; }
 
-    void set_symbol_set(SymbolSetId id) noexcept { symbols_id_ = id; }
+        void draw(const Domain::Core::GameState &) override;
 
-    void draw(const Domain::Core::GameState &) override;
-
-private:
-    SymbolSetId symbols_id_{SymbolSetId::Ascii};
-};
-
-} // namespace Infrastructure::IOConsole
+    private:
+        SymbolSetId symbols_id_{SymbolSetId::Ascii};
+    };
+}

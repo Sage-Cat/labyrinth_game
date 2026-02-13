@@ -1,145 +1,198 @@
 #include "domain/services/MapGen.hpp"
 
-#include "domain/core/IRng.hpp"
 #include "domain/entities/Map.hpp"
+#include "domain/entities/Tile.hpp"
+#include "domain/entities/TileType.hpp"
 #include "domain/rules/GameRules.hpp"
-#include "domain/services/MapGenHelpers.hpp"
 
 #include "infra/log/Logger.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
-namespace Domain::Services {
-
-namespace {
-
-using Domain::Core::IRng;
-using Domain::Entities::Map;
-using Domain::Rules::GameRules;
-using namespace Domain::Services::MapGenDetail;
-
-constexpr std::uint16_t kMinMapSize = 5;
-
-[[nodiscard]] std::uint16_t clamp_size(std::uint16_t value) noexcept
+namespace Domain::Services
 {
-    return std::max<std::uint16_t>(value, kMinMapSize);
-}
-
-[[nodiscard]] std::int32_t rng_int(IRng &rng, std::int32_t min, std::int32_t max)
+namespace
 {
-    // Contract: IRng::next_int(min, max) returns int in [min, max].
-    return rng.next_int(min, max);
-}
+    constexpr std::uint16_t kMinMapSide = 5;
+    constexpr std::uint16_t kMaxMapSide = 255;
+    constexpr std::uint16_t kMinRoomSide = 3;
 
-} // namespace
+    std::uint16_t clamp_map_side(std::uint16_t side) noexcept
+    {
+        return std::clamp(side, kMinMapSide, kMaxMapSide);
+    }
 
-void MapGen::generate(const GameRules &rules, IRng &rng, Map &map)
-{
-    // Dungeon generation theory https://github.com/Sage-Cat/labyrinth_game/wiki/MapGen-theory
+    void make_wall(Domain::Entities::Map &map, std::size_t x, std::size_t y)
+    {
+        auto &tile           = map.grid().at(x, y);
+        tile.type            = Domain::Entities::TileType::Wall;
+        tile.blocks_movement = true;
+        tile.blocks_sight    = true;
+    }
 
-    LOG(INFO) << "MapGen::generate started";
-    // 1) Determine map size (with a minimal safety clamp).
-    const auto width  = clamp_size(rules.map_w);
-    const auto height = clamp_size(rules.map_h);
+    void make_floor(Domain::Entities::Map &map, std::size_t x, std::size_t y)
+    {
+        auto &tile           = map.grid().at(x, y);
+        tile.type            = Domain::Entities::TileType::Floor;
+        tile.blocks_movement = false;
+        tile.blocks_sight    = false;
+    }
 
-    LOG(INFO) << "MapGen: map size set to " << width << "x" << height;
-    // Recreate the map with requested size.
-    map = Map{width, height};
+    void carve_room(Domain::Entities::Map &map, std::uint16_t x, std::uint16_t y, std::uint16_t w,
+                    std::uint16_t h)
+    {
+        const std::uint16_t x_end = static_cast<std::uint16_t>(x + w);
+        const std::uint16_t y_end = static_cast<std::uint16_t>(y + h);
 
-    // 2) Fill everything with walls.
-    fill_with_walls(map);
-    LOG(DEBUG) << "MapGen: map filled with walls";
+        for (std::uint16_t yy = y; yy < y_end; ++yy) {
+            for (std::uint16_t xx = x; xx < x_end; ++xx) {
+                make_floor(map, xx, yy);
+            }
+        }
+    }
 
-    // MapGen parameters (expected in GameRules).
-    const std::uint16_t max_rooms     = rules.max_rooms;
-    const std::uint16_t room_min_size = rules.room_min_size;
-    const std::uint16_t room_max_size = rules.room_max_size;
+    Domain::Core::Position room_center(std::uint16_t x, std::uint16_t y, std::uint16_t w,
+                                       std::uint16_t h)
+    {
+        return Domain::Core::Position{
+            static_cast<std::uint16_t>(x + (w / 2)),
+            static_cast<std::uint16_t>(y + (h / 2)),
+        };
+    }
 
-    LOG(INFO) << "MapGen: max_rooms=" << max_rooms << " room_min_size=" << room_min_size
-              << " room_max_size=" << room_max_size;
-
-    std::vector<Room> rooms;
-    rooms.reserve(max_rooms);
-
-    // 3) Try to place up to max_rooms non-overlapping rooms.
-    for (std::uint16_t i = 0; i < max_rooms; ++i) {
-        const auto room_w = static_cast<std::uint16_t>(rng_int(rng, room_min_size, room_max_size));
-        const auto room_h = static_cast<std::uint16_t>(rng_int(rng, room_min_size, room_max_size));
-
-        // Skip if room is too large for this map.
-        if (room_w >= width - 2 || room_h >= height - 2) {
-            LOG(DEBUG) << "MapGen: skipped room (too large for map)";
-            continue;
+    void carve_h_corridor(Domain::Entities::Map &map, std::uint16_t x0, std::uint16_t x1,
+                          std::uint16_t y)
+    {
+        std::uint16_t x_start = x0;
+        std::uint16_t x_end   = x1;
+        if (x_start > x_end) {
+            std::swap(x_start, x_end);
         }
 
-        const auto max_x = static_cast<std::int32_t>(width - room_w - 1);
-        const auto max_y = static_cast<std::int32_t>(height - room_h - 1);
+        for (std::uint16_t x = x_start; x <= x_end; ++x) {
+            make_floor(map, x, y);
+        }
+    }
 
-        if (max_x <= 1 || max_y <= 1) {
-            // Map is too small for additional rooms.
-            LOG(INFO) << "MapGen: map too small for more rooms, stopping";
+    void carve_v_corridor(Domain::Entities::Map &map, std::uint16_t y0, std::uint16_t y1,
+                          std::uint16_t x)
+    {
+        std::uint16_t y_start = y0;
+        std::uint16_t y_end   = y1;
+        if (y_start > y_end) {
+            std::swap(y_start, y_end);
+        }
+
+        for (std::uint16_t y = y_start; y <= y_end; ++y) {
+            make_floor(map, x, y);
+        }
+    }
+
+    std::size_t count_floor_tiles(const Domain::Entities::Map &map)
+    {
+        std::size_t floor_count = 0;
+        for (std::uint16_t y = 0; y < map.height(); ++y) {
+            for (std::uint16_t x = 0; x < map.width(); ++x) {
+                if (!map.grid().at(x, y).blocks_movement) {
+                    ++floor_count;
+                }
+            }
+        }
+        return floor_count;
+    }
+} // namespace
+
+void MapGen::generate(const Domain::Rules::GameRules &rules, Domain::Core::IRng &rng,
+                      Domain::Entities::Map &map)
+{
+    const std::uint16_t width  = clamp_map_side(rules.map_w);
+    const std::uint16_t height = clamp_map_side(rules.map_h);
+    LOG(INFO) << "MapGen::generate started, requested=" << rules.map_w << "x" << rules.map_h
+              << ", clamped=" << width << "x" << height;
+
+    map = Domain::Entities::Map{width, height};
+
+    for (std::uint16_t y = 0; y < height; ++y) {
+        for (std::uint16_t x = 0; x < width; ++x) {
+            make_wall(map, x, y);
+        }
+    }
+
+    const std::uint16_t max_room_side_w =
+        std::max<std::uint16_t>(kMinRoomSide, static_cast<std::uint16_t>(width / 3));
+    const std::uint16_t max_room_side_h =
+        std::max<std::uint16_t>(kMinRoomSide, static_cast<std::uint16_t>(height / 3));
+    const std::uint16_t room_side_w_cap = std::min<std::uint16_t>(
+        10, std::min<std::uint16_t>(max_room_side_w, static_cast<std::uint16_t>(width - 2)));
+    const std::uint16_t room_side_h_cap = std::min<std::uint16_t>(
+        8, std::min<std::uint16_t>(max_room_side_h, static_cast<std::uint16_t>(height - 2)));
+
+    std::vector<Domain::Core::Position> centers;
+    constexpr std::uint16_t kRoomAttempts = 12;
+
+    for (std::uint16_t i = 0; i < kRoomAttempts; ++i) {
+        if (room_side_w_cap < kMinRoomSide || room_side_h_cap < kMinRoomSide) {
             break;
         }
 
-        const auto x = static_cast<std::uint16_t>(rng_int(rng, 1, max_x));
-        const auto y = static_cast<std::uint16_t>(rng_int(rng, 1, max_y));
+        const std::uint16_t room_w =
+            static_cast<std::uint16_t>(rng.next_int(kMinRoomSide, room_side_w_cap));
+        const std::uint16_t room_h =
+            static_cast<std::uint16_t>(rng.next_int(kMinRoomSide, room_side_h_cap));
 
-        Room new_room{x, y, room_w, room_h};
-
-        bool overlaps = false;
-        for (const auto &existing : rooms) {
-            if (new_room.intersects(existing)) {
-                overlaps = true;
-                break;
-            }
-        }
-
-        if (overlaps) {
-            LOG(DEBUG) << "MapGen: skipped overlapping room";
+        if (room_w >= width - 1 || room_h >= height - 1) {
             continue;
         }
 
-        // 4) Carve the room.
-        carve_room(map, new_room);
-        LOG(DEBUG) << "MapGen: carved room at (" << x << "," << y << ") size " << room_w << "x"
-                   << room_h;
-
-        // 5) Connect to previous room with a corridor.
-        if (!rooms.empty()) {
-            const auto prev_center = rooms.back().center();
-            const auto new_center  = new_room.center();
-
-            const bool horizontal_first = rng_int(rng, 0, 1) == 0;
-
-            if (horizontal_first) {
-                carve_h_tunnel(map, static_cast<std::uint16_t>(prev_center.x),
-                               static_cast<std::uint16_t>(new_center.x),
-                               static_cast<std::uint16_t>(prev_center.y));
-                carve_v_tunnel(map, static_cast<std::uint16_t>(prev_center.y),
-                               static_cast<std::uint16_t>(new_center.y),
-                               static_cast<std::uint16_t>(new_center.x));
-            } else {
-                carve_v_tunnel(map, static_cast<std::uint16_t>(prev_center.y),
-                               static_cast<std::uint16_t>(new_center.y),
-                               static_cast<std::uint16_t>(prev_center.x));
-                carve_h_tunnel(map, static_cast<std::uint16_t>(prev_center.x),
-                               static_cast<std::uint16_t>(new_center.x),
-                               static_cast<std::uint16_t>(new_center.y));
-            }
-            LOG(DEBUG) << "MapGen: corridor carved between rooms";
+        const int max_x = static_cast<int>(width - room_w - 1);
+        const int max_y = static_cast<int>(height - room_h - 1);
+        if (max_x < 1 || max_y < 1) {
+            continue;
         }
 
-        rooms.push_back(new_room);
+        const std::uint16_t room_x = static_cast<std::uint16_t>(rng.next_int(1, max_x));
+        const std::uint16_t room_y = static_cast<std::uint16_t>(rng.next_int(1, max_y));
+        carve_room(map, room_x, room_y, room_w, room_h);
+
+        const auto center = room_center(room_x, room_y, room_w, room_h);
+        if (!centers.empty()) {
+            const auto prev_center = centers.back();
+            const bool horizontal_first = rng.next_int(0, 1) == 0;
+
+            if (horizontal_first) {
+                carve_h_corridor(map, prev_center.x, center.x, prev_center.y);
+                carve_v_corridor(map, prev_center.y, center.y, center.x);
+            } else {
+                carve_v_corridor(map, prev_center.y, center.y, prev_center.x);
+                carve_h_corridor(map, prev_center.x, center.x, center.y);
+            }
+        }
+        centers.push_back(center);
     }
 
-    // 6) Ensure outer border is solid walls.
-    enforce_border_walls(map);
+    // Keep a solid border so the map remains visually closed.
+    for (std::uint16_t x = 0; x < width; ++x) {
+        make_wall(map, x, 0);
+        make_wall(map, x, static_cast<std::uint16_t>(height - 1));
+    }
+    for (std::uint16_t y = 0; y < height; ++y) {
+        make_wall(map, 0, y);
+        make_wall(map, static_cast<std::uint16_t>(width - 1), y);
+    }
 
-    LOG(DEBUG) << "MapGen: enforced border walls";
+    if (count_floor_tiles(map) == 0) {
+        // Safety fallback: carve the inner area to keep map non-empty.
+        for (std::uint16_t y = 1; y < static_cast<std::uint16_t>(height - 1); ++y) {
+            for (std::uint16_t x = 1; x < static_cast<std::uint16_t>(width - 1); ++x) {
+                make_floor(map, x, y);
+            }
+        }
+    }
 
-    LOG(INFO) << "MapGen::generate finished, rooms placed: " << rooms.size();
+    LOG(INFO) << "MapGen::generate finished, rooms=" << centers.size()
+              << ", floor_tiles=" << count_floor_tiles(map);
 }
-
 } // namespace Domain::Services
