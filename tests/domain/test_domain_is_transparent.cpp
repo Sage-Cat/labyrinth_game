@@ -15,7 +15,7 @@ int main()
 
     //In-bounds Floor
     TestUtils::expect(map.set_transparent({3, 9}, true), "Setting floor should be succeed");
-    TestUtils::expect(map.is_transparent({3, 9}) == true, "is_transparent Floor");
+    TestUtils::expect(map.is_transparent({3, 9}), "is_transparent Floor");
 
     //Out-of-bounds
     TestUtils::expect(!map.is_transparent({10, 10}), "Out-of-bounds");

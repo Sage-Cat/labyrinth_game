@@ -22,7 +22,8 @@ bool Map::set_transparent(Domain::Core::Position p, bool transparent) noexcept
 {
     if (!in_bounds(p))
         return false;
-    return tiles_.at(p.x, p.y).blocks_sight = !transparent;
+    tiles_.at(p.x, p.y).blocks_sight = !transparent;
+    return true;
 }
 
 bool Map::set_passable(Domain::Core::Position p, bool passable)
