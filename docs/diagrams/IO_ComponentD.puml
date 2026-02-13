@@ -1,21 +1,28 @@
 @startuml
-title "Ports & Adapters – I/O Boundaries"
+title "Ports & Adapters – I/O Boundaries (Current)"
 
 package Domain {
+  interface IRng {
+    +next_u32() : uint32_t
+    +next_int(min_inclusive:int, max_inclusive:int) : int
+  }
+
+  class GameState
+}
+
+package Application {
   interface IRenderer {
-    +draw(map: Map, entities, hud, log): void
+    +draw(state: GameState) : void
   }
   interface IInput {
-    +poll(): InputCommand
+    +poll() : optional<InputCommand>
   }
   interface ISaveGameRepo {
-    +save(state: GameState): Status
-    +load(): Result<GameState>
+    +save(state: GameState, path: string) : bool
+    +load(state: GameState, path: string) : bool
   }
-  interface IRng {
-    +next_int(a,b): int
-    +shuffle<T>(...): void
-  }
+
+  class GameLoop
 }
 
 package Infrastructure {
@@ -30,4 +37,7 @@ ConsoleRenderer ..|> IRenderer
 KeyboardInput ..|> IInput
 FileSaveGameRepo ..|> ISaveGameRepo
 StdRng ..|> IRng
+
+GameLoop ..> IInput : uses
+GameLoop ..> IRenderer : uses
 @enduml

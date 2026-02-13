@@ -1,3 +1,6 @@
 build/
 .vscode
 .cache/
+.clangd
+.editorconfig
+CMakePresets.json
