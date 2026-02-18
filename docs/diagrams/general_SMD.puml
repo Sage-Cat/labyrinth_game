@@ -1,19 +1,31 @@
 @startuml
-title "State Machine – Game Flow"
+title "State Machine – Executable Flow (Current)"
 
-[*] --> Menu
-Menu --> Playing : Start New
-Menu --> Playing : Load
+[*] --> Boot
 
-state Playing {
-  [*] --> Running
-  Running --> Victory : player on active exit
-  Running --> Defeat  : HP <= 0
-  Running --> Paused  : (optional)
-  Paused --> Running  : resume
+state Boot {
+  [*] --> ParseCLI
+  ParseCLI --> NewGame : no --load
+  ParseCLI --> LoadGame : --load=<path>
+
+  NewGame --> Ready : NewGameUseCase ok
+  NewGame --> [*] : fail -> exit code 11
+
+  LoadGame --> Ready : LoadGameUseCase ok
+  LoadGame --> [*] : fail -> exit code 10
 }
 
-Playing --> Menu : Quit
-Victory --> Menu : any key
-Defeat  --> Menu : any key
+Boot --> Running : Ready
+Running --> Exited : q / CmdQuit
+Running --> Exited : no input (EOF)
+Running --> Exited : unhandled exception
+
+state "Planned (not implemented yet)" as Planned {
+  Running --> Victory : state.victory == true
+  Running --> Defeat  : state.defeat == true
+}
+
+Victory --> Exited
+Defeat  --> Exited
+Exited --> [*]
 @enduml

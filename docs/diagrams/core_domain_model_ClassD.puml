@@ -1,148 +1,141 @@
 @startuml
-title Domain Model – Core Types & Entities
+title "Domain Model – Core Types & Entities (Current)"
 
-/' --- Enumerations --- '/
-enum Direction {
-  Up
-  Down
-  Left
-  Right
+package "Domain::Core" {
+  enum Direction {
+    Up
+    Down
+    Left
+    Right
+  }
+
+  class EntityId {
+    +value : uint32_t
+  }
+
+  class Position {
+    +x : uint16_t
+    +y : uint16_t
+  }
+
+  class Stats {
+    +hp : int
+    +max_hp : int
+    +atk : int
+    +def : int
+  }
+
+  class Glyph {
+    +ch : char
+  }
+
+  interface IRng {
+    +next_u32() : uint32_t
+    +next_int(min_inclusive:int, max_inclusive:int) : int
+  }
+
+  class GameState {
+    +map : Map
+    +actors : vector<unique_ptr<Actor>>
+    +items : vector<unique_ptr<Item>>
+
+    +turn : uint64_t
+    +victory : bool
+    +defeat : bool
+    +score : int
+
+    +rules : GameRules
+    +rng : IRng*
+  }
 }
 
-enum TileType {
-  Wall
-  Floor
+package "Domain::Rules" {
+  class GameRules {
+    +map_w : uint16_t
+    +map_h : uint16_t
+    +max_rooms : uint16_t
+    +room_min_size : uint16_t
+    +room_max_size : uint16_t
+
+    +enemy_count : uint16_t
+    +potion_heal_max : int
+    +drop_rates_note : string
+  }
 }
 
-enum EnemyState {
-  Resting
-  Chasing
+package "Domain::Entities" {
+  enum TileType {
+    Wall
+    Floor
+  }
+
+  enum EnemyState {
+    Resting
+    Chasing
+  }
+
+  class Tile {
+    +type : TileType
+    +blocks_movement : bool
+    +blocks_sight : bool
+  }
+
+  class GridTile
+
+  class Map {
+    +width() : uint16_t
+    +height() : uint16_t
+    +in_bounds(p: Position) : bool
+    +is_passable(p: Position) : bool
+    +is_transparent(p: Position) : bool
+    +set_passable(p: Position, passable: bool) : bool
+    +set_transparent(p: Position, transparent: bool) : bool
+  }
+
+  abstract class Actor {
+    +id : EntityId
+    +pos : Position
+    +stats : Stats
+    +glyph : Glyph
+    {abstract} +action(state: GameState) : void
+  }
+
+  class Player {
+    +has_key : bool
+    +action(state: GameState) : void
+  }
+
+  class Enemy {
+    +state : EnemyState
+    +action(state: GameState) : void
+  }
+
+  class Item {
+    +id : EntityId
+    +pos : Position
+  }
+
+  class Key
+
+  class HealthPotion {
+    +healingValue : int
+  }
 }
 
-/' --- Simple value objects --- '/
-class EntityId {
-  +value : uint32_t
-}
+' --- Relations ---
+Map *-- GridTile : tiles_
+GridTile *-- Tile : grid
 
-class Position {
-  +x : uint16_t
-  +y : uint16_t
-}
-
-class Stats {
-  +hp : int
-  +max_hp : int
-  +atk : int
-  +def : int
-}
-
-class Glyph {
-  +ch : char
-}
-
-/' --- Tile / Map --- '/
-class GridTile
-
-class Tile {
-  +type : TileType
-  +blocks_movement : bool
-  +blocks_sight : bool
-}
-
-class Map {
-  +width() : uint16_t
-  +height() : uint16_t
-  +in_bounds(p: Position) : bool
-  +is_passable(p: Position) : bool
-  +is_transparent(p: Position) : bool
-  -tiles : GridTile[*]
-}
-
-/' --- Items & actors --- '/
-class Item {
-  +id : EntityId
-  +pos : Position
-  +kind : ItemKind
-  +value : int
-}
-
-class HealthPotion {
-  +healingValue : int
-}
-
-class Key {
-}
-
-abstract class Actor {
-  +id : uint32_t
-  +posX : int
-  +posY : int
-  #hp : int
-  {abstract} action() : void
-}
-
-class Player {
-  +has_key : bool
-  action() : void
-}
-
-class Enemy {
-  +state : EnemyState
-  action() : void
-}
-
-
-/' --- Ports / rules / state --- '/
-interface IRng {
-  +next_int(a:int, b:int) : int
-  +shuffle(list) : void
-}
-
-class GameRules {
-  +map_w : uint16_t
-  +map_h : uint16_t
-  +enemy_count : uint16_t
-  +potion_heal_max : int
-  +drop_rates_note : string
-}
-
-class GameState {
-  +map : Map
-  +actors : Actors[*]
-  +items : Item[*]
-  +turn : uint64_t
-  +victory : bool
-  +defeat : bool
-  +rules : GameRules
-  +rng : IRng
-  +score : int
-}
-
-/' --- Relations --- '/
-Map o-- GridTile : tiles
-Tile --> TileType
-Enemy --> EnemyState
-
-' inheritance
 Actor <|-- Player
 Actor <|-- Enemy
 
-Item <|-- HealthPotion
 Item <|-- Key
+Item <|-- HealthPotion
 
-' value-object ownership
-Actor *-- Position
-Actor *-- Stats
-Actor *-- Glyph
-Actor *-- EntityId
-Item   *-- EntityId
-Item   *-- Position
-
-' state composition (contains)
 GameState *-- Map
 GameState *-- "0..*" Actor
 GameState *-- "0..*" Item
 GameState *-- GameRules
-GameState --> IRng : depends on
+GameState ..> IRng : rng (borrowed)
 
 @enduml
