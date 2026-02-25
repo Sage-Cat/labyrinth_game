@@ -20,6 +20,7 @@ struct GameState {
     std::uint64_t turn{0};
     bool victory{false};
     bool defeat{false};
+    bool quit{false};
     int score{0};
 
     // config & services
