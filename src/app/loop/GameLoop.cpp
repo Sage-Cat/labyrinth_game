@@ -2,6 +2,7 @@
 
 #include "app/loop/IInput.hpp"
 #include "app/loop/IRenderer.hpp"
+#include "app/systems/EnemyAISystem.hpp"
 #include "domain/core/Direction.hpp"
 #include "domain/core/GameState.hpp"
 #include "domain/core/Position.hpp"
@@ -20,117 +21,113 @@
 #include <variant>
 #include <vector>
 
-namespace Application::Loop
+namespace Application::Loop {
+namespace {
+Domain::Entities::Player *find_player(Domain::Core::GameState &state)
 {
-namespace
-{
-    Domain::Entities::Player *find_player(Domain::Core::GameState &state)
-    {
-        for (auto &actor : state.actors) {
-            if (auto *player = dynamic_cast<Domain::Entities::Player *>(actor.get())) {
-                return player;
-            }
+    for (auto &actor : state.actors) {
+        if (auto *player = dynamic_cast<Domain::Entities::Player *>(actor.get())) {
+            return player;
         }
-        return nullptr;
+    }
+    return nullptr;
+}
+
+bool enemy_at_position(const Domain::Core::GameState &state, Domain::Core::Position pos)
+{
+    for (const auto &actor : state.actors) {
+        const auto *enemy = dynamic_cast<const Domain::Entities::Enemy *>(actor.get());
+        if (enemy != nullptr && enemy->pos.x == pos.x && enemy->pos.y == pos.y) {
+            return true;
+        }
+    }
+    return false;
+}
+
+Domain::Core::Position moved_position(Domain::Core::Position from, Domain::Core::Direction dir)
+{
+    int x = from.x;
+    int y = from.y;
+    switch (dir) {
+    case Domain::Core::Direction::Up:
+        --y;
+        break;
+    case Domain::Core::Direction::Down:
+        ++y;
+        break;
+    case Domain::Core::Direction::Left:
+        --x;
+        break;
+    case Domain::Core::Direction::Right:
+        ++x;
+        break;
     }
 
-    bool enemy_at_position(const Domain::Core::GameState &state, Domain::Core::Position pos)
-    {
-        for (const auto &actor : state.actors) {
-            const auto *enemy = dynamic_cast<const Domain::Entities::Enemy *>(actor.get());
-            if (enemy != nullptr && enemy->pos.x == pos.x && enemy->pos.y == pos.y) {
-                return true;
-            }
+    if (x < 0 || y < 0 || x > 255 || y > 255) {
+        return from;
+    }
+
+    return Domain::Core::Position{static_cast<std::uint8_t>(x), static_cast<std::uint8_t>(y)};
+}
+
+void pick_items_on_player_tile(Domain::Core::GameState &state, Domain::Entities::Player &player)
+{
+    for (std::size_t i = 0; i < state.items.size();) {
+        auto &item = state.items[i];
+        if (item->pos.x != player.pos.x || item->pos.y != player.pos.y) {
+            ++i;
+            continue;
         }
+
+        if (dynamic_cast<Domain::Entities::Key *>(item.get()) != nullptr) {
+            player.has_key = true;
+            state.score += 100;
+            LOG(INFO) << "Player picked up key";
+        } else if (auto *potion = dynamic_cast<Domain::Entities::HealthPotion *>(item.get())) {
+            const int old_hp = player.stats.hp;
+            player.stats.hp =
+                std::min(player.stats.max_hp, player.stats.hp + std::max(1, potion->healingValue));
+            LOG(INFO) << "Player used potion, hp " << old_hp << " -> " << player.stats.hp;
+        } else {
+            LOG(INFO) << "Player picked up unknown item type";
+        }
+
+        const auto idx =
+            static_cast<std::vector<std::unique_ptr<Domain::Entities::Item>>::difference_type>(i);
+        state.items.erase(state.items.begin() + idx);
+    }
+}
+
+bool try_move_player(Domain::Core::GameState &state, Domain::Entities::Player &player,
+                     Domain::Core::Direction dir)
+{
+    const auto target = moved_position(player.pos, dir);
+    if (target.x == player.pos.x && target.y == player.pos.y) {
+        LOG(DEBUG) << "Move ignored: invalid target";
+        return false;
+    }
+    if (!state.map.in_bounds(target)) {
+        LOG(DEBUG) << "Move blocked: out of bounds";
+        return false;
+    }
+    if (!state.map.is_passable(target)) {
+        LOG(DEBUG) << "Move blocked: wall";
+        return false;
+    }
+    if (enemy_at_position(state, target)) {
+        LOG(DEBUG) << "Move blocked: enemy on target tile";
         return false;
     }
 
-    Domain::Core::Position moved_position(Domain::Core::Position from, Domain::Core::Direction dir)
-    {
-        int x = from.x;
-        int y = from.y;
-        switch (dir) {
-        case Domain::Core::Direction::Up:
-            --y;
-            break;
-        case Domain::Core::Direction::Down:
-            ++y;
-            break;
-        case Domain::Core::Direction::Left:
-            --x;
-            break;
-        case Domain::Core::Direction::Right:
-            ++x;
-            break;
-        }
-
-        if (x < 0 || y < 0 || x > 255 || y > 255) {
-            return from;
-        }
-
-        return Domain::Core::Position{static_cast<std::uint8_t>(x), static_cast<std::uint8_t>(y)};
-    }
-
-    void pick_items_on_player_tile(Domain::Core::GameState &state, Domain::Entities::Player &player)
-    {
-        for (std::size_t i = 0; i < state.items.size();) {
-            auto &item = state.items[i];
-            if (item->pos.x != player.pos.x || item->pos.y != player.pos.y) {
-                ++i;
-                continue;
-            }
-
-            if (dynamic_cast<Domain::Entities::Key *>(item.get()) != nullptr) {
-                player.has_key = true;
-                state.score += 100;
-                LOG(INFO) << "Player picked up key";
-            } else if (auto *potion = dynamic_cast<Domain::Entities::HealthPotion *>(item.get())) {
-                const int old_hp = player.stats.hp;
-                player.stats.hp =
-                    std::min(player.stats.max_hp, player.stats.hp + std::max(1, potion->healingValue));
-                LOG(INFO) << "Player used potion, hp " << old_hp << " -> " << player.stats.hp;
-            } else {
-                LOG(INFO) << "Player picked up unknown item type";
-            }
-
-            const auto idx = static_cast<std::vector<std::unique_ptr<Domain::Entities::Item>>::difference_type>(i);
-            state.items.erase(state.items.begin() + idx);
-        }
-    }
-
-    bool try_move_player(Domain::Core::GameState &state, Domain::Entities::Player &player,
-                         Domain::Core::Direction dir)
-    {
-        const auto target = moved_position(player.pos, dir);
-        if (target.x == player.pos.x && target.y == player.pos.y) {
-            LOG(DEBUG) << "Move ignored: invalid target";
-            return false;
-        }
-        if (!state.map.in_bounds(target)) {
-            LOG(DEBUG) << "Move blocked: out of bounds";
-            return false;
-        }
-        if (!state.map.is_passable(target)) {
-            LOG(DEBUG) << "Move blocked: wall";
-            return false;
-        }
-        if (enemy_at_position(state, target)) {
-            LOG(DEBUG) << "Move blocked: enemy on target tile";
-            return false;
-        }
-
-        player.pos = target;
-        pick_items_on_player_tile(state, player);
-        LOG(INFO) << "Player moved to (" << static_cast<int>(player.pos.x) << ","
-                  << static_cast<int>(player.pos.y) << ")";
-        return true;
-    }
+    player.pos = target;
+    pick_items_on_player_tile(state, player);
+    LOG(INFO) << "Player moved to (" << static_cast<int>(player.pos.x) << ","
+              << static_cast<int>(player.pos.y) << ")";
+    return true;
+}
 } // namespace
 
-GameLoop::GameLoop(IInput &input, IRenderer &renderer)
-    : input_(input), renderer_(renderer)
-{
-}
+GameLoop::GameLoop(IInput &input, IRenderer &renderer) : input_(input), renderer_(renderer) {}
 
 int GameLoop::run(Domain::Core::GameState &state)
 {
@@ -169,10 +166,28 @@ int GameLoop::run(Domain::Core::GameState &state)
                     ++state.turn;
                 } else if constexpr (std::is_same_v<T, CmdQuit>) {
                     LOG(INFO) << "Quit requested";
-                    running = false;
+                    state.quit = true;
+                    running    = false;
                 }
             },
             command.value());
+
+        if (state.quit) {
+            LOG(INFO) << "Quit flag set, exiting loop";
+            break;
+        }
+
+        LOG(DEBUG) << "Running EnemyAISystem for turn" << state.turn;
+        Application::Systems::EnemyAISystem{}.action(state);
+
+        for (const auto &actor : state.actors) {
+            auto *enemy = dynamic_cast<Domain::Entities::Enemy *>(actor.get());
+            if (enemy) {
+                LOG(DEBUG) << "Enemy at (" << enemy->pos.x << "," << enemy->pos.y << ") state: "
+                           << (enemy->state == Domain::Entities::EnemyState::Resting ? "Resting"
+                                                                                     : "Chasing");
+            }
+        }
     }
 
     LOG(INFO) << "GameLoop::run finished";

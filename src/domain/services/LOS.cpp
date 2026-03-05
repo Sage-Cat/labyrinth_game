@@ -47,6 +47,9 @@ bool LOS::can_see(const Domain::Entities::Map &map, const Domain::Core::Position
 
         int e2 = 2 * err;
 
+        int old_x = x0;
+        int old_y = y0;
+
         if (e2 >= -dy) {
             err -= dy;
             x0 += sx;
@@ -54,6 +57,18 @@ bool LOS::can_see(const Domain::Entities::Map &map, const Domain::Core::Position
         if (e2 <= dx) {
             err += dx;
             y0 += sy;
+        }
+
+        if (x0 != old_x && y0 != old_y) {
+            Domain::Core::Position side1{static_cast<std::uint16_t>(old_x),
+                                         static_cast<std::uint16_t>(y0)};
+            Domain::Core::Position side2{static_cast<std::uint16_t>(x0),
+                                         static_cast<std::uint16_t>(old_y)};
+            if (!map.is_transparent(side1) || !map.is_transparent(side2)) {
+                LOG(DEBUG) << "LOS blocked at corner (" << side1.x << "," << side1.y << ") or ("
+                           << side2.x << "," << side2.y << ")";
+                return false;
+            }
         }
     }
 }
