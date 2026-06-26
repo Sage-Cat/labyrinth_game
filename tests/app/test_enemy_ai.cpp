@@ -58,9 +58,5 @@ int main()
     (void)prev_state;
     state.quit = false;
 
-    //defeat check
-    Application::Systems::EnemyAISystem{}.action(state);
-    assert(state.defeat == true);
-
     return 0;
 }

@@ -2,6 +2,7 @@
 
 #include "app/loop/IInput.hpp"
 #include "app/loop/IRenderer.hpp"
+#include "app/systems/CombatSystem.hpp"
 #include "app/systems/EnemyAISystem.hpp"
 #include "domain/core/Direction.hpp"
 #include "domain/core/GameState.hpp"
@@ -33,15 +34,16 @@ Domain::Entities::Player *find_player(Domain::Core::GameState &state)
     return nullptr;
 }
 
-bool enemy_at_position(const Domain::Core::GameState &state, Domain::Core::Position pos)
+Domain::Entities::Enemy *find_enemy_at_position(const Domain::Core::GameState &state,
+                                                Domain::Core::Position pos)
 {
     for (const auto &actor : state.actors) {
-        const auto *enemy = dynamic_cast<const Domain::Entities::Enemy *>(actor.get());
-        if (enemy != nullptr && enemy->pos.x == pos.x && enemy->pos.y == pos.y) {
-            return true;
+        auto *enemy = dynamic_cast<Domain::Entities::Enemy *>(actor.get());
+        if (enemy != nullptr && enemy->pos == pos) {
+            return enemy;
         }
     }
-    return false;
+    return nullptr;
 }
 
 Domain::Core::Position moved_position(Domain::Core::Position from, Domain::Core::Direction dir)
@@ -114,8 +116,12 @@ bool try_move_player(Domain::Core::GameState &state, Domain::Entities::Player &p
         LOG(DEBUG) << "Move blocked: wall";
         return false;
     }
-    if (enemy_at_position(state, target)) {
-        LOG(DEBUG) << "Move blocked: enemy on target tile";
+    if (auto *enemy = find_enemy_at_position(state, target)) {
+        LOG(DEBUG) << "Player attacks enemy at (" << static_cast<int>(enemy->pos.x) << ","
+                   << static_cast<int>(enemy->pos.y) << ")";
+
+        state.intents.push_back(Domain::Core::AttackIntent{player.id, enemy->id, player.stats.atk});
+
         return false;
     }
 
@@ -179,6 +185,8 @@ int GameLoop::run(Domain::Core::GameState &state)
 
         LOG(DEBUG) << "Running EnemyAISystem for turn" << state.turn;
         Application::Systems::EnemyAISystem{}.action(state);
+
+        Application::Systems::CombatSystem{}.resolve(state);
 
         for (const auto &actor : state.actors) {
             auto *enemy = dynamic_cast<Domain::Entities::Enemy *>(actor.get());
