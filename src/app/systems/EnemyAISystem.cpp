@@ -1,5 +1,4 @@
 #include "app/systems/EnemyAISystem.hpp"
-
 #include "domain/core/GameState.hpp"
 #include "domain/entities/actors/Enemy.hpp"
 #include "domain/entities/actors/Player.hpp"
@@ -9,13 +8,6 @@
 #include <cmath>
 
 namespace Application::Systems {
-
-static bool is_adjacent(Domain::Core::Position a, Domain::Core::Position b)
-{
-    int dx = std::abs(int(a.x) - int(b.x));
-    int dy = std::abs(int(a.y) - int(b.y));
-    return dx + dy == 1;
-}
 
 static Domain::Core::Position moved(Domain::Core::Position p, Domain::Core::Direction d)
 {
@@ -94,7 +86,8 @@ void EnemyAISystem::action(Domain::Core::GameState &state)
             continue;
         if (is_adjacent(enemy_pos, player_pos)) {
             LOG(INFO) << "Enemy attacks player!";
-            state.defeat = true;
+
+            state.intents.push_back({enemy->id, player->id, enemy->stats.atk});
             continue;
         }
 
