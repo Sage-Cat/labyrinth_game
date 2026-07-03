@@ -3,8 +3,10 @@
 
 #include "domain/core/GameState.hpp"
 #include "domain/entities/actors/Player.hpp"
+#include "domain/entities/items/Coin.hpp"
 #include "domain/entities/items/HealthPotion.hpp"
 #include "domain/entities/items/Key.hpp"
+#include "domain/entities/items/Sword.hpp"
 
 namespace {
 using Domain::Core::GameState;
@@ -42,6 +44,12 @@ void PickupSystem::process(Domain::Core::GameState &state)
                 player->stats.hp +
                     dynamic_cast<Domain::Entities::HealthPotion *>(it->get())->healingValue,
                 player->stats.max_hp);
+            it = state.items.erase(it);
+        } else if (dynamic_cast<Domain::Entities::Sword *>(it->get())) {
+            player->stats.atk += dynamic_cast<Domain::Entities::Sword *>(it->get())->attack_bonus;
+            it = state.items.erase(it);
+        } else if (dynamic_cast<Domain::Entities::Coin *>(it->get())) {
+            state.score += dynamic_cast<Domain::Entities::Coin *>(it->get())->value;
             it = state.items.erase(it);
         } else {
             ++it;

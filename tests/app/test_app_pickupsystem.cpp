@@ -2,8 +2,10 @@
 
 #include "domain/core/GameState.hpp"
 #include "domain/entities/actors/Player.hpp"
+#include "domain/entities/items/Coin.hpp"
 #include "domain/entities/items/HealthPotion.hpp"
 #include "domain/entities/items/Key.hpp"
+#include "domain/entities/items/Sword.hpp"
 
 #include <cassert>
 #include <memory>
@@ -165,6 +167,40 @@ void test_item_on_other_tile()
     assert(t.state.items.size() == 1);
 }
 
+void test_pickup_sword()
+{
+    auto t = make_state();
+
+    t.player->stats.atk = 5;
+
+    auto sword          = std::make_unique<Sword>();
+    sword->pos          = {1, 1};
+    sword->attack_bonus = 5;
+    t.state.items.push_back(std::move(sword));
+
+    PickupSystem system;
+    system.process(t.state);
+
+    assert(t.player->stats.atk == 10);
+    assert(t.state.items.empty());
+}
+
+void test_pickup_coin()
+{
+    auto t = make_state();
+
+    auto coin   = std::make_unique<Coin>();
+    coin->pos   = {1, 1};
+    coin->value = 1;
+    t.state.items.push_back(std::move(coin));
+
+    PickupSystem system;
+    system.process(t.state);
+
+    assert(t.state.items.empty());
+    assert(t.state.score == 1);
+}
+
 int main()
 {
     test_pickup_key();
@@ -174,6 +210,8 @@ int main()
     test_pickup_multiple_items();
     test_item_on_other_tile();
     test_ignore_unknown_item();
+    test_pickup_sword();
+    test_pickup_coin();
 
     return 0;
 }
