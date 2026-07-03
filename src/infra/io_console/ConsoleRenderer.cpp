@@ -168,8 +168,23 @@ void ConsoleRenderer::draw(const Domain::Core::GameState &state)
         std::cout << "|\n";
     }
     std::cout << "+" << border_line << "+\n";
-    std::cout << "Turn: " << state.turn << " | Map: " << width << "x" << height
-              << " | Actors: " << state.actors.size() << " | Items: " << state.items.size() << "\n";
+
+    const Domain::Entities::Player *player = nullptr;
+    for (const auto &actor : state.actors) {
+        if (auto p = dynamic_cast<const Domain::Entities::Player *>(actor.get())) {
+            player = p;
+            break;
+        }
+    }
+
+    if (player != nullptr) {
+        std::cout << "Turn: " << state.turn << " | HP: " << player->stats.hp << "/"
+                  << player->stats.max_hp << " | ATK: " << player->stats.atk
+                  << " | Score: " << state.score << "\n";
+    }
+
+    std::cout << " | Map: " << width << "x" << height << " | Actors: " << state.actors.size()
+              << " | Items: " << state.items.size() << "\n";
     std::cout << symbols.legend << "\n";
     std::cout << "Controls: w/a/s/d or arrows move, . wait, q quit\n";
 

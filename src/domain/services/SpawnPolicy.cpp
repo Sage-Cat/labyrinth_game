@@ -192,7 +192,7 @@ void SpawnPolicy::place_items(const Domain::Rules::GameRules &rules, Domain::Cor
         auto coin      = std::make_unique<Domain::Entities::Coin>();
         coin->id.value = static_cast<std::uint32_t>(1300 + i);
         coin->pos      = coin_position.value();
-        coin->value    = 1;
+        coin->value    = 10;
         coin->glyph.ch = '$';
 
         items.push_back(std::move(coin));

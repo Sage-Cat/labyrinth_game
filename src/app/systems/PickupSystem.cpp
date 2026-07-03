@@ -38,7 +38,8 @@ void PickupSystem::process(Domain::Core::GameState &state)
 
         if (dynamic_cast<Domain::Entities::Key *>(it->get())) {
             player->has_key = true;
-            it              = state.items.erase(it);
+            state.score += 100;
+            it = state.items.erase(it);
         } else if (dynamic_cast<Domain::Entities::HealthPotion *>(it->get())) {
             player->stats.hp = std::min(
                 player->stats.hp +
