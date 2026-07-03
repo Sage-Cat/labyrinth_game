@@ -12,7 +12,6 @@ struct IInput;
 class GameLoop {
 public:
     GameLoop(IInput &input, IRenderer &renderer);
-    // Run returns exit code (0 normal). No logic yet.
     int run(Domain::Core::GameState &state);
 
 private:
