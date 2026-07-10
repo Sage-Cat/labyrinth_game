@@ -2,10 +2,6 @@
 #include "app/loop/InputCommand.hpp"
 #include "domain/core/AttackIntent.hpp"
 #include "domain/core/GameState.hpp"
-#include "domain/entities/items/HealthPotion.hpp"
-#include "domain/entities/items/Item.hpp"
-#include "domain/entities/items/Key.hpp"
-#include <algorithm>
 #include <type_traits>
 #include <variant>
 
@@ -60,8 +56,6 @@ bool PlayerSystem::try_move_player(Domain::Core::GameState &state, Domain::Entit
     }
 
     player.pos = target;
-    pick_items_on_player_tile(state, player);
-
     return true;
 }
 
@@ -114,27 +108,4 @@ Domain::Core::Position PlayerSystem::moved_position(Domain::Core::Position from,
     return Domain::Core::Position{static_cast<std::uint8_t>(x), static_cast<std::uint8_t>(y)};
 }
 
-void PlayerSystem::pick_items_on_player_tile(Domain::Core::GameState &state,
-                                             Domain::Entities::Player &player)
-{
-    for (std::size_t i = 0; i < state.items.size();) {
-        auto &item = state.items[i];
-        if (item->pos.x != player.pos.x || item->pos.y != player.pos.y) {
-            ++i;
-            continue;
-        }
-
-        if (dynamic_cast<Domain::Entities::Key *>(item.get()) != nullptr) {
-            player.has_key = true;
-            state.score += 100;
-        } else if (auto *potion = dynamic_cast<Domain::Entities::HealthPotion *>(item.get())) {
-            player.stats.hp =
-                std::min(player.stats.max_hp, player.stats.hp + std::max(1, potion->healingValue));
-        }
-
-        const auto idx =
-            static_cast<std::vector<std::unique_ptr<Domain::Entities::Item>>::difference_type>(i);
-        state.items.erase(state.items.begin() + idx);
-    }
-}
 } // namespace Application::Systems

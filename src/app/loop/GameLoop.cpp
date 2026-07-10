@@ -4,6 +4,7 @@
 
 #include "app/systems/CombatSystem.hpp"
 #include "app/systems/EnemyAISystem.hpp"
+#include "app/systems/PickupSystem.hpp"
 #include "app/systems/PlayerSystem.hpp"
 
 #include "domain/core/GameState.hpp"
@@ -21,6 +22,7 @@ int GameLoop::run(Domain::Core::GameState &state)
     Application::Systems::PlayerSystem player_system{};
     Application::Systems::EnemyAISystem enemy_ai_system{};
     Application::Systems::CombatSystem combat_system{};
+    Application::Systems::PickupSystem pickup_system{};
 
     bool running = true;
 
@@ -40,6 +42,7 @@ int GameLoop::run(Domain::Core::GameState &state)
             break;
         }
 
+        pickup_system.process(state);
         enemy_ai_system.action(state);
         combat_system.resolve(state);
 

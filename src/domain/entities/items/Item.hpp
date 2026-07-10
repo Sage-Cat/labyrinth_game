@@ -10,6 +10,7 @@ public:
     // Data per diagram
     Domain::Core::EntityId id{};
     Domain::Core::Position pos{};
+    Domain::Core::Glyph glyph{};
 
     // Kind-specific data goes in derived types.
 };
