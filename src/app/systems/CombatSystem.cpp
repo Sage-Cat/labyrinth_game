@@ -4,6 +4,7 @@
 #include "domain/entities/actors/Actor.hpp"
 #include "domain/entities/actors/Enemy.hpp"
 #include "domain/entities/actors/Player.hpp"
+#include "domain/services/DamageCalculator.hpp"
 #include <algorithm>
 
 namespace Application::Systems {
@@ -16,12 +17,11 @@ void CombatSystem::resolve(Domain::Core::GameState &state)
         if (!attacker || !target)
             continue;
 
-        const int damage = std::max(1, intent.damage);
-        target->stats.hp -= damage;
+        const int damage =
+            Domain::Services::DamageCalculator::compute(attacker->stats, target->stats);
+        target->stats.hp = std::max(0, target->stats.hp - damage);
 
-        if (target->stats.hp <= 0) {
-            target->stats.hp = 0;
-
+        if (target->stats.hp == 0) {
             if (dynamic_cast<Domain::Entities::Player *>(target)) {
                 state.defeat = true;
             }
