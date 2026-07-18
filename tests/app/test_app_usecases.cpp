@@ -10,15 +10,13 @@
 #include "app/usecases/SaveGameUseCase.hpp"
 #include "domain/core/GameState.hpp"
 #include "domain/core/IRng.hpp"
-#include "domain/entities/items/Key.hpp"
 #include "domain/entities/actors/Enemy.hpp"
 #include "domain/entities/actors/Player.hpp"
+#include "domain/entities/items/Key.hpp"
 #include "domain/rules/GameRules.hpp"
 
-namespace
-{
-class SeededRng final : public Domain::Core::IRng
-{
+namespace {
+class SeededRng final : public Domain::Core::IRng {
 public:
     explicit SeededRng(std::uint32_t seed) : state_(seed) {}
 
@@ -44,8 +42,7 @@ private:
     std::uint32_t state_;
 };
 
-struct DummyRepo final : Application::Persistence::ISaveGameRepo
-{
+struct DummyRepo final : Application::Persistence::ISaveGameRepo {
     bool save(const Domain::Core::GameState &, const std::string &) override { return false; }
     bool load(Domain::Core::GameState &, const std::string &) override { return false; }
 };
@@ -62,14 +59,33 @@ std::size_t count_floor_tiles(const Domain::Core::GameState &st)
     }
     return count;
 }
+
+bool same_map(const Domain::Core::GameState &lhs, const Domain::Core::GameState &rhs)
+{
+    if (lhs.map.width() != rhs.map.width() || lhs.map.height() != rhs.map.height()) {
+        return false;
+    }
+
+    for (std::uint16_t y = 0; y < lhs.map.height(); ++y) {
+        for (std::uint16_t x = 0; x < lhs.map.width(); ++x) {
+            Domain::Core::Position pos{static_cast<std::uint16_t>(x),
+                                       static_cast<std::uint16_t>(y)};
+
+            if (lhs.map.is_passable(pos) != rhs.map.is_passable(pos)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 } // namespace
 
 int main()
 {
     Domain::Rules::GameRules rules{};
-    rules.map_w         = 32;
-    rules.map_h         = 18;
-    rules.enemy_count   = 4;
+    rules.map_w           = 32;
+    rules.map_h           = 18;
+    rules.enemy_count     = 4;
     rules.potion_heal_max = 9;
 
     SeededRng rng_1{123456u};
@@ -93,11 +109,10 @@ int main()
 
     std::size_t player_count = 0;
     std::size_t enemy_count  = 0;
-    std::vector<Domain::Core::Position> actor_positions;
+
     for (const auto &actor : st_1.actors) {
         assert(st_1.map.in_bounds(actor->pos));
         assert(st_1.map.is_passable(actor->pos));
-        actor_positions.push_back(actor->pos);
 
         if (dynamic_cast<const Domain::Entities::Player *>(actor.get()) != nullptr) {
             ++player_count;
@@ -120,18 +135,47 @@ int main()
     }
     assert(!st_1.items.empty());
     assert(key_count >= 1);
+    assert(same_map(st_1, st_2));
 
-    // Determinism check for seeded RNG: same seed => same spawn layout.
     assert(st_1.actors.size() == st_2.actors.size());
     for (std::size_t i = 0; i < st_1.actors.size(); ++i) {
-        assert(st_1.actors[i]->pos.x == st_2.actors[i]->pos.x);
-        assert(st_1.actors[i]->pos.y == st_2.actors[i]->pos.y);
+        assert(st_1.actors[i]->pos == st_2.actors[i]->pos);
     }
     assert(st_1.items.size() == st_2.items.size());
     for (std::size_t i = 0; i < st_1.items.size(); ++i) {
-        assert(st_1.items[i]->pos.x == st_2.items[i]->pos.x);
-        assert(st_1.items[i]->pos.y == st_2.items[i]->pos.y);
+        assert(st_1.items[i]->pos == st_2.items[i]->pos);
     }
+
+    SeededRng rng_3{111111u};
+    SeededRng rng_4{222222u};
+
+    Domain::Core::GameState st_3{};
+    Domain::Core::GameState st_4{};
+
+    assert(Application::Usecases::NewGameUseCase::execute(st_3, rules, rng_3));
+    assert(Application::Usecases::NewGameUseCase::execute(st_4, rules, rng_4));
+
+    bool different = !same_map(st_3, st_4);
+    if (!different) {
+        assert(st_3.actors.size() == st_4.actors.size());
+        for (std::size_t i = 0; !different && i < st_3.actors.size(); ++i) {
+            if (st_3.actors[i]->pos != st_4.actors[i]->pos) {
+                different = true;
+                break;
+            }
+        }
+    }
+    if (!different) {
+        assert(st_3.items.size() == st_4.items.size());
+        for (std::size_t i = 0; !different && i < st_3.items.size(); ++i) {
+            if (st_3.items[i]->pos != st_4.items[i]->pos) {
+                different = true;
+                break;
+            }
+        }
+    }
+
+    assert(different);
 
     DummyRepo repo{};
     assert(!Application::Usecases::SaveGameUseCase::save(repo, st_1, "x.sav"));
