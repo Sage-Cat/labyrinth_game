@@ -27,16 +27,16 @@ struct Room {
 };
 
 // Helpers
-void fill_with_walls(Domain::Entities::Map &map) noexcept;
+void fill_with_walls(Domain::Entities::Map &map);
 
-void carve_room(Domain::Entities::Map &map, const Room &room) noexcept;
+void carve_room(Domain::Entities::Map &map, const Room &room);
 
 void carve_h_tunnel(Domain::Entities::Map &map, std::uint16_t x1, std::uint16_t x2,
-                    std::uint16_t y) noexcept;
+                    std::uint16_t y);
 
 void carve_v_tunnel(Domain::Entities::Map &map, std::uint16_t y1, std::uint16_t y2,
-                    std::uint16_t x) noexcept;
+                    std::uint16_t x);
 
-void enforce_border_walls(Domain::Entities::Map &map) noexcept;
+void enforce_border_walls(Domain::Entities::Map &map);
 
 } // namespace Domain::Services::MapGenDetail

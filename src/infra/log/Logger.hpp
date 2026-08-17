@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -13,6 +14,7 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <utility>
 
 #if defined(__linux__)
 #include <unistd.h>

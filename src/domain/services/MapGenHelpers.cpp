@@ -29,7 +29,7 @@ bool Room::intersects(const Room &other) const noexcept
              other.y + other.h + 1 <= y);
 }
 
-void fill_with_walls(Map &map) noexcept
+void fill_with_walls(Map &map)
 {
     LOG(DEBUG) << "MapGenHelpers: filling map with walls";
 
@@ -43,7 +43,7 @@ void fill_with_walls(Map &map) noexcept
     }
 }
 
-void carve_room(Map &map, const Room &room) noexcept
+void carve_room(Map &map, const Room &room)
 {
     LOG(DEBUG) << "MapGenHelpers: carving room at (" << room.x << "," << room.y << ") size "
                << room.w << "x" << room.h;
@@ -63,7 +63,7 @@ void carve_room(Map &map, const Room &room) noexcept
     }
 }
 
-void carve_h_tunnel(Map &map, std::uint16_t x1, std::uint16_t x2, std::uint16_t y) noexcept
+void carve_h_tunnel(Map &map, std::uint16_t x1, std::uint16_t x2, std::uint16_t y)
 {
     if (map.height() == 0 || map.width() == 0) {
         LOG(DEBUG) << "MapGenHelpers: skipped horizontal tunnel (empty map)";
@@ -89,7 +89,7 @@ void carve_h_tunnel(Map &map, std::uint16_t x1, std::uint16_t x2, std::uint16_t 
     }
 }
 
-void carve_v_tunnel(Map &map, std::uint16_t y1, std::uint16_t y2, std::uint16_t x) noexcept
+void carve_v_tunnel(Map &map, std::uint16_t y1, std::uint16_t y2, std::uint16_t x)
 {
     if (map.height() == 0 || map.width() == 0) {
         LOG(DEBUG) << "MapGenHelpers: skipped vertical tunnel (empty map)";
@@ -115,7 +115,7 @@ void carve_v_tunnel(Map &map, std::uint16_t y1, std::uint16_t y2, std::uint16_t 
     }
 }
 
-void enforce_border_walls(Map &map) noexcept
+void enforce_border_walls(Map &map)
 {
     const auto w = map.width();
     const auto h = map.height();

@@ -14,7 +14,7 @@ void CombatSystem::resolve(Domain::Core::GameState &state)
         auto *attacker = state.find_actor(intent.attacker);
         auto *target   = state.find_actor(intent.target);
 
-        if (!attacker || !target)
+        if (!attacker || !target || attacker->stats.hp <= 0 || target->stats.hp <= 0)
             continue;
 
         const int damage =

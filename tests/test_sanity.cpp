@@ -1,7 +1,9 @@
 
 #include <cassert>
 #include <iostream>
+#include <stdexcept>
 
+#include "domain/core/Grid.hpp"
 #include "domain/core/Version.hpp"
 
 static void test_version_is_semver_like()
@@ -18,6 +20,15 @@ static void test_version_is_semver_like()
 int main()
 {
     test_version_is_semver_like();
+
+    Domain::Core::Grid<int> grid{2, 2};
+    try {
+        (void)grid.at(2, 0);
+        std::cerr << "Grid::at accepted an out-of-bounds coordinate\n";
+        return EXIT_FAILURE;
+    } catch (const std::out_of_range &) {
+    }
+
     std::cout << "[OK] Sanity tests passed\n";
     return EXIT_SUCCESS;
 }
