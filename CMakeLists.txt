@@ -7,7 +7,7 @@ project(labyrinth
 
 # ---- Options ----
 option(LABYRINTH_WARNINGS_AS_ERRORS "Treat warnings as errors" ON)
-option(LABYRINTH_ENABLE_SANITIZERS  "Enable ASan/UBSan (non-MSVC)" ON)
+option(LABYRINTH_ENABLE_SANITIZERS  "Enable ASan/UBSan (GCC/Clang)" OFF)
 option(LABYRINTH_BUILD_TESTS        "Build unit tests" ON)
 
 # ---- C++ standard ----
@@ -30,9 +30,11 @@ else()
 endif()
 
 # ---- Sanitizers (non-MSVC) ----
-if(LABYRINTH_ENABLE_SANITIZERS AND NOT MSVC)
+if(LABYRINTH_ENABLE_SANITIZERS AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   add_compile_options(-fsanitize=address,undefined)
   add_link_options(-fsanitize=address,undefined)
+elseif(LABYRINTH_ENABLE_SANITIZERS)
+  message(WARNING "LABYRINTH_ENABLE_SANITIZERS is unsupported by ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
 # ---- Expose version to code ----
@@ -56,4 +58,3 @@ if(LABYRINTH_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
 endif()
-

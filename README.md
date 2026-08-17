@@ -1,43 +1,40 @@
-# labyrinth
+# Labyrinth
 
-Console rogue-like in modern C++20. This repository currently contains **Step 1: Repo & Build Bootstrapping**.
+Labyrinth is an early C++20 console roguelike. The current MVP generates a seeded dungeon, supports player movement, enemy pursuit and combat, and collectible keys, potions, swords, and coins. Save/load and a complete victory condition are not implemented yet.
 
-## Build (out-of-source recommended)
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel
+## Prerequisites
+
+- CMake 3.20 or newer
+- A C++20 compiler (GCC, Clang, or MSVC)
+
+## Build and run
+
+```sh
+cmake --preset release
+cmake --build --preset release
+./build/release/bin/labyrinth
 ```
 
-## Run
-```bash
-./build/bin/labyrinth
-```
+Use `--seed=<number>` for a reproducible dungeon and `--symbols=unicode` for Unicode glyphs. ASCII is the default.
 
-Default symbol set is ASCII. You can switch at runtime:
-```bash
-./build/bin/labyrinth --symbols=ascii
-./build/bin/labyrinth --symbols=unicode
-```
-Or via env var:
-```bash
-LABYRINTH_SYMBOLS=ascii ./build/bin/labyrinth
-```
+## Controls
 
-### Controls (MVP)
-- `w` `a` `s` `d`: move player (no Enter needed in terminal)
-- Arrow keys: move player
+- `W`, `A`, `S`, `D` or arrow keys: move
 - `.`: wait one turn
-- `q`: quit
+- `Q`: quit
+
+When input is redirected, commands may also be written as `up`, `down`, `left`, `right`, `quit`, or `exit`, one per line.
 
 ## Tests
-```bash
-ctest --test-dir build --output-on-failure
+
+```sh
+cmake --preset debug
+cmake --build --preset debug
+ctest --preset debug
 ```
 
-## Options
-- `LABYRINTH_WARNINGS_AS_ERRORS=ON` — treat warnings as errors.
-- `LABYRINTH_ENABLE_SANITIZERS=ON` — enable ASan/UBSan on non-MSVC.
-- `LABYRINTH_BUILD_TESTS=OFF` — skip tests.
+The debug preset enables AddressSanitizer and UndefinedBehaviorSanitizer on GCC and Clang. A non-sanitized `release` test preset is also available.
 
-## Layout
-See `src/` and `tests/` skeleton matching the implementation plan.
+## License
+
+Released under the [MIT License](LICENSE).
