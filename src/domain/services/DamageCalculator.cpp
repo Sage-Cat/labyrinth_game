@@ -1,11 +1,12 @@
 #include "domain/services/DamageCalculator.hpp"
 #include "domain/core/Stats.hpp"
 
-namespace Domain::Services
+#include <algorithm>
+
+namespace Domain::Services {
+int DamageCalculator::compute(const Domain::Core::Stats &attacker,
+                              const Domain::Core::Stats &defender)
 {
-    int DamageCalculator::compute(const Domain::Core::Stats &, const Domain::Core::Stats &)
-    {
-        // TODO: calculate damage based on actors stats
-        return 0;
-    }
+    return std::max(1, attacker.atk - defender.def);
 }
+} // namespace Domain::Services

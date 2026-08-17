@@ -7,6 +7,12 @@ namespace Infrastructure::IOConsole
     class KeyboardInput final : public Application::Loop::IInput
     {
     public:
-        std::optional<Application::Loop::InputCommand> poll() override; // stub: nullopt
+        KeyboardInput();
+        ~KeyboardInput() override;
+
+        std::optional<Application::Loop::InputCommand> poll() override;
+
+    private:
+        bool raw_mode_enabled_{false};
     };
 }

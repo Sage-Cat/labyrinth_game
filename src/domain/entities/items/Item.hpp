@@ -2,17 +2,16 @@
 #include "domain/core/EntityId.hpp"
 #include "domain/core/Position.hpp"
 
-namespace Domain::Entities
-{
-    class Item
-    {
-    public:
-        virtual ~Item() = default;
+namespace Domain::Entities {
+class Item {
+public:
+    virtual ~Item() = default;
 
-        // Data per diagram
-        Domain::Core::EntityId id{};
-        Domain::Core::Position pos{};
+    // Data per diagram
+    Domain::Core::EntityId id{};
+    Domain::Core::Position pos{};
+    Domain::Core::Glyph glyph{};
 
-        // Kind-specific data goes in derived types.
-    };
-}
+    // Kind-specific data goes in derived types.
+};
+} // namespace Domain::Entities

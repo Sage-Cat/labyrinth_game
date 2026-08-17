@@ -1,9 +1,4 @@
 #pragma once
-namespace Domain::Entities
-{
-    enum class EnemyState
-    {
-        Resting,
-        Chasing
-    };
+namespace Domain::Entities {
+enum class EnemyState { Resting, Chasing };
 }

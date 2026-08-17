@@ -1,7 +1,15 @@
 @startuml
-title "Activity – Enemy AI (concise)"
-
 start
+
+title "Activity – Enemy AI (Direction / Planned)"
+
+note right
+  Current repo state:
+  - EnemyAISystem is a stub: src/app/systems/EnemyAISystem.cpp
+  - Supporting domain services already exist:
+    * LOS: src/domain/services/LOS.cpp
+    * Pathfinding: src/domain/services/Pathfinding.cpp
+end note
 
 ' If resting, check line of sight once
 if (State is Resting?) then (yes)
@@ -19,7 +27,7 @@ if (State is Chasing?) then (yes)
     :Attack player;
   else (no)
     :Choose one-step path toward player;
-    if (Step available AND passable?) then (yes)
+    if (Step available AND passable AND not occupied?) then (yes)
       :Move one cell toward player;
     else (no)
       :Set state to Resting (lost target);

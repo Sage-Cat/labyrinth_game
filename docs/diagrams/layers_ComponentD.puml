@@ -1,5 +1,5 @@
 @startuml
-title "labyrinth — Layers Component Diagram"
+title "labyrinth — Layers (Current + Near-Term Direction)"
 
 skinparam componentStyle rectangle
 skinparam rectangle {
@@ -12,85 +12,98 @@ skinparam ArrowColor #555
 skinparam packageTitleFontColor #222
 
 ' ================== LAYERS ==================
-rectangle "Composition" as L_Composition {
-  component "main.cpp\n(wiring)" as C_Main
+rectangle "Composition (Executable)" as L_Composition {
+  component "main.cpp\nCLI + wiring" as C_Main
 }
 
 rectangle "Application" as L_App {
-  component "GameLoop" as C_GameLoop
-  component "UseCases\n- NewGame\n- SaveGame\n- LoadGame\n- ConfigLoad" as C_UseCases
-  component "Systems\n- PlayerSystem\n- EnemyAISystem\n- CombatSystem\n- PickupSystem\n- WinLoseSystem" as C_Systems
-  component "InputCommand\n(model)" as C_InputModel
+  component "GameLoop\n(currently monolithic)" as C_GameLoop
+
+  interface "IInput\n(app/loop)" as I_Input
+  interface "IRenderer\n(app/loop)" as I_Renderer
+  component "InputCommand\n(app/loop)" as C_InputModel
+
+  interface "ISaveGameRepo\n(app/persistence)" as I_SaveRepo
+
+  component "UseCases\n- NewGameUseCase (implemented)\n- LoadGameUseCase (stub)\n- SaveGameUseCase (stub)\n- ConfigLoadUseCase" as C_UseCases
+
+  component "Systems (planned)\n- PlayerSystem\n- EnemyAISystem\n- CombatSystem\n- PickupSystem\n- WinLoseSystem\n(stubs, not wired yet)" as C_Systems
 }
 
 rectangle "Domain" as L_Domain {
-  component "Core\n- GameState\n- Value Types\n- Rules" as C_Core
-  component "Entities\n- Player\n- Enemy\n- Item\n- Map/Tile" as C_Entities
-  component "Services\n- MapGen\n- LOS\n- Pathfinding\n- SpawnPolicy\n- WinLose\n- Damage" as C_Services
+  component "Core\n- GameState\n- IRng\n- Value Types" as C_Core
+  component "Rules\n- GameRules" as C_Rules
+  component "Entities\n- Map/Tile\n- Actor/Player/Enemy\n- Item/Key/Potion" as C_Entities
+  component "Services\n- MapGen\n- SpawnPolicy\n- LOS\n- Pathfinding\n- DamageCalculator (stub)\n- WinLosePolicy (stub)" as C_Services
 
-  interface "IRng" as I_Rng
-  interface "ISaveGameRepo" as I_SaveRepo
-  interface "IRenderer" as I_Renderer
-  interface "IInput" as I_Input
+  interface "IRng\n(domain/core)" as I_Rng
 }
 
 rectangle "Infrastructure" as L_Infra {
   component "ConsoleRenderer" as C_ConsoleRenderer
   component "KeyboardInput" as C_KeyboardInput
-  component "FileSaveGameRepo\n(text snapshot,\natomic write)" as C_FileRepo
+  component "Console helpers\n(SymbolSet/FrameBuilder/Terminal)\n(partially unused)" as C_ConsoleHelpers
+
+  component "FileSaveGameRepo\n(stub)" as C_FileRepo
   component "StdRng\n(std::mt19937)" as C_StdRng
+
   component "Logger" as C_Logger
-  component "ConfigLoader\n(optional)" as C_Config
+  component "ConfigLoader\n(stub/unused)" as C_Config
 }
 
-' ================== DEPENDENCY RULES ==================
-' App depends inward on Domain (policies & state)
-C_GameLoop --> C_Core
-C_GameLoop --> C_Systems
-C_GameLoop --> C_UseCases
-C_UseCases --> C_Core
-C_Systems  --> C_Core
-C_Systems  --> C_Services
-C_Services --> C_Core
-C_Entities --> C_Core
-
-' Ports (domain-facing interfaces) required by App
-C_GameLoop ..> I_Renderer : uses
-C_GameLoop ..> I_Input    : uses
-C_UseCases  ..> I_SaveRepo: uses
-C_Services  ..> I_Rng     : uses
-
-' Infra implements Domain ports (adapters)
-C_ConsoleRenderer ..|> I_Renderer
-C_KeyboardInput   ..|> I_Input
-C_FileRepo        ..|> I_SaveRepo
-C_StdRng          ..|> I_Rng
-
-' Composition wires everything together
-C_Main --> C_GameLoop
+' ================== DEPENDENCIES ==================
+' Composition wires the runtime
 C_Main --> C_UseCases
-C_Main --> C_Systems
+C_Main --> C_GameLoop
 C_Main --> C_ConsoleRenderer
 C_Main --> C_KeyboardInput
 C_Main --> C_FileRepo
 C_Main --> C_StdRng
 C_Main --> C_Logger
-C_Main --> C_Config
 
-' Optional: show log/config used by app during boot / runtime
+' Application depends inward on Domain
+C_GameLoop --> C_Core
+C_GameLoop --> C_Entities
+C_UseCases --> C_Core
+C_UseCases --> C_Services
+C_Services --> C_Entities
+C_Entities --> C_Core
+C_Rules --> C_Core
+
+' App ports
+C_GameLoop ..> I_Input : uses
+C_GameLoop ..> I_Renderer : uses
+C_UseCases ..> I_SaveRepo : uses (Save/Load)
+
+' Domain port
+C_Services ..> I_Rng : uses
+
+' Infrastructure implements ports
+C_ConsoleRenderer ..|> I_Renderer
+C_KeyboardInput ..|> I_Input
+C_FileRepo ..|> I_SaveRepo
+C_StdRng ..|> I_Rng
+
+' Infra internals
+C_ConsoleRenderer --> C_ConsoleHelpers
+
+' Logging (current state)
 C_GameLoop ..> C_Logger : logs
-C_UseCases  ..> C_Logger : logs
-C_UseCases  ..> C_Config : read settings
+C_UseCases ..> C_Logger : logs
+C_Services ..> C_Logger : logs (tech debt)
 
 ' ================== NOTES ==================
-note bottom of L_Domain
-  Domain is pure (no I/O).
-  Ports (I*) live here so Infra depends inward.
+note bottom of L_Infra
+  Infrastructure = adapters. They implement App/Domain ports.
+  Safe to replace without touching Domain/App (ideally).
 end note
 
-note bottom of L_Infra
-  Infra = adapters only. They implement Domain ports.
-  Safe to replace without touching Domain/App.
+note bottom of L_Domain
+  Current tech debt:
+  Domain code includes infra Logger (domain -> infra dependency).
+  Goal direction: keep Domain pure (no infra includes),
+  and push logging to App/Infra boundaries.
 end note
 
 @enduml
+

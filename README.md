@@ -13,6 +13,22 @@ cmake --build build --parallel
 ./build/bin/labyrinth
 ```
 
+Default symbol set is ASCII. You can switch at runtime:
+```bash
+./build/bin/labyrinth --symbols=ascii
+./build/bin/labyrinth --symbols=unicode
+```
+Or via env var:
+```bash
+LABYRINTH_SYMBOLS=ascii ./build/bin/labyrinth
+```
+
+### Controls (MVP)
+- `w` `a` `s` `d`: move player (no Enter needed in terminal)
+- Arrow keys: move player
+- `.`: wait one turn
+- `q`: quit
+
 ## Tests
 ```bash
 ctest --test-dir build --output-on-failure

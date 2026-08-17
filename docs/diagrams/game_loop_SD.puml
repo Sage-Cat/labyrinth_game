@@ -1,38 +1,50 @@
 @startuml
-title "Sequence – One Tick of GameLoop"
+title "Sequence – GameLoop::run (Current MVP)"
 
 actor User
 participant KeyboardInput as In
 participant GameLoop as Loop
-participant PlayerSystem as PS
-participant EnemyAISystem as ES
-participant CombatSystem as CS
-participant PickupSystem as PU
-participant WinLoseSystem as WS
 participant ConsoleRenderer as R
 participant GameState as S
 
-User -> In : key press
-In --> Loop : InputCommand
-Loop -> PS : apply(InputCommand, S)
-PS --> Loop : updated S
+note over Loop
+  Current implementation notes (src/app/loop/GameLoop.cpp):
+  - Movement + pickup + potion auto-use are handled inside GameLoop.
+  - Enemy AI / CombatSystem / WinLoseSystem are NOT invoked yet.
+  - Save/Load commands exist but are stubs (log only).
+end note
 
-Loop -> ES : stepAI(S)
-ES --> Loop : intents/updates
+Loop -> Loop : find_player(S)
+alt player not found
+  Loop --> User : return 1
+else player found
+  loop each tick
+    Loop -> R : draw(S)
 
-Loop -> CS : resolveCollisions(S)
-CS --> Loop : updated S
+    User -> In : key press
+    In --> Loop : poll() -> optional<InputCommand>
 
-Loop -> PU : processPickups(S)
-PU --> Loop : updated S
+    alt no command (EOF / no input available)
+      Loop -> Loop : break
+    else command available
+      alt CmdMove(dir)
+        Loop -> Loop : validate target (bounds, passable, no enemy)
+        Loop -> Loop : move player + pick items on tile
+        Loop -> Loop : ++S.turn
+      else CmdWait
+        Loop -> Loop : ++S.turn
+      else CmdSave
+        Loop -> Loop : log "Save requested (not yet implemented)"
+        Loop -> Loop : ++S.turn
+      else CmdLoad
+        Loop -> Loop : log "Load requested (not yet implemented)"
+        Loop -> Loop : ++S.turn
+      else CmdQuit
+        Loop -> Loop : running = false
+      end
+    end
+  end
 
-Loop -> WS : check(S)
-WS --> Loop : victory/defeat flags
-
-alt not ended
-  Loop -> R : draw(S)
-  R --> Loop
-else ended
-  Loop -> R : draw end screen
+  Loop --> User : return 0
 end
 @enduml
