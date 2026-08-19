@@ -4,3 +4,5 @@ build/
 .clangd
 .editorconfig
 CMakePresets.json
+Testing/
+logs/
