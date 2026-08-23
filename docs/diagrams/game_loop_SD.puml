@@ -11,7 +11,7 @@ note over Loop
   Current implementation notes (src/app/loop/GameLoop.cpp):
   - Movement + pickup + potion auto-use are handled inside GameLoop.
   - Enemy AI / CombatSystem / WinLoseSystem are NOT invoked yet.
-  - Save/Load commands exist but are stubs (log only).
+  - Save/Load commands exist; file-backed persistence is still MVP-incomplete.
 end note
 
 Loop -> Loop : find_player(S)

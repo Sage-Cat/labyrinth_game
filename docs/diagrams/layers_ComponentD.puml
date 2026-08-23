@@ -25,16 +25,16 @@ rectangle "Application" as L_App {
 
   interface "ISaveGameRepo\n(app/persistence)" as I_SaveRepo
 
-  component "UseCases\n- NewGameUseCase (implemented)\n- LoadGameUseCase (stub)\n- SaveGameUseCase (stub)\n- ConfigLoadUseCase" as C_UseCases
+  component "UseCases\n- NewGameUseCase (implemented)\n- LoadGameUseCase (MVP incomplete)\n- SaveGameUseCase (MVP incomplete)\n- ConfigLoadUseCase" as C_UseCases
 
-  component "Systems (planned)\n- PlayerSystem\n- EnemyAISystem\n- CombatSystem\n- PickupSystem\n- WinLoseSystem\n(stubs, not wired yet)" as C_Systems
+  component "Systems (implemented)\n- PlayerSystem\n- EnemyAISystem\n- CombatSystem\n- PickupSystem\n- WinLoseSystem" as C_Systems
 }
 
 rectangle "Domain" as L_Domain {
   component "Core\n- GameState\n- IRng\n- Value Types" as C_Core
   component "Rules\n- GameRules" as C_Rules
   component "Entities\n- Map/Tile\n- Actor/Player/Enemy\n- Item/Key/Potion" as C_Entities
-  component "Services\n- MapGen\n- SpawnPolicy\n- LOS\n- Pathfinding\n- DamageCalculator (stub)\n- WinLosePolicy (stub)" as C_Services
+  component "Services\n- MapGen\n- SpawnPolicy\n- LOS\n- Pathfinding\n- DamageCalculator\n- WinLosePolicy" as C_Services
 
   interface "IRng\n(domain/core)" as I_Rng
 }
@@ -44,7 +44,7 @@ rectangle "Infrastructure" as L_Infra {
   component "KeyboardInput" as C_KeyboardInput
   component "Console helpers\n(SymbolSet/FrameBuilder/Terminal)\n(partially unused)" as C_ConsoleHelpers
 
-  component "FileSaveGameRepo\n(stub)" as C_FileRepo
+  component "FileSaveGameRepo\n(MVP incomplete)" as C_FileRepo
   component "StdRng\n(std::mt19937)" as C_StdRng
 
   component "Logger" as C_Logger
