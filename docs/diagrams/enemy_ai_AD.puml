@@ -5,7 +5,7 @@ title "Activity – Enemy AI (Direction / Planned)"
 
 note right
   Current repo state:
-  - EnemyAISystem is a stub: src/app/systems/EnemyAISystem.cpp
+  - EnemyAISystem: src/app/systems/EnemyAISystem.cpp
   - Supporting domain services already exist:
     * LOS: src/domain/services/LOS.cpp
     * Pathfinding: src/domain/services/Pathfinding.cpp
