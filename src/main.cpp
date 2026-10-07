@@ -79,10 +79,10 @@ Cli parse_cli(int argc, char **argv)
 
 int app_entry(int argc, char **argv) noexcept
 {
-    Infrastructure::Log::Logger::instance().init_file("labyrinth.log");
-    LOG(INFO) << "Labyrinth startup";
-
     try {
+        Infrastructure::Log::Logger::instance().init_file("labyrinth.log");
+        LOG(INFO) << "Labyrinth startup";
+
         const Cli cli = parse_cli(argc, argv);
 
         const std::uint32_t seed = cli.seed.has_value() ? *cli.seed : std::random_device{}();

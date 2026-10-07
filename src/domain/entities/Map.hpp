@@ -21,7 +21,7 @@ public:
     }
     [[nodiscard]] bool is_passable(Domain::Core::Position p) const;
     [[nodiscard]] bool is_transparent(Domain::Core::Position p) const;
-    [[nodiscard]] bool set_transparent(Domain::Core::Position p, bool transparent) noexcept;
+    [[nodiscard]] bool set_transparent(Domain::Core::Position p, bool transparent);
 
     // Access (optional for future systems)
     GridTile &grid() { return tiles_; }

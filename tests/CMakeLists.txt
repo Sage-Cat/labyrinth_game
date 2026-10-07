@@ -1,3 +1,13 @@
+function(labyrinth_configure_test target)
+  target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includes)
+  if(MSVC)
+    target_compile_options(${target} PRIVATE /UNDEBUG)
+  else()
+    target_compile_options(${target} PRIVATE -UNDEBUG)
+  endif()
+  add_test(NAME ${target} COMMAND ${target})
+endfunction()
+
 # ---- Root tests ----
 file(GLOB ROOT_TESTS CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
@@ -7,8 +17,7 @@ foreach(t ${ROOT_TESTS})
   get_filename_component(name "${t}" NAME_WE)
   add_executable(${name} ${t})
   target_link_libraries(${name} PRIVATE labyrinth_domain)
-  target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includes)
-  add_test(NAME ${name} COMMAND ${name})
+  labyrinth_configure_test(${name})
 endforeach()
 
 # ---- Domain tests ----
@@ -20,8 +29,7 @@ foreach(t ${DOMAIN_TESTS})
   get_filename_component(name "${t}" NAME_WE)
   add_executable(${name} ${t})
   target_link_libraries(${name} PRIVATE labyrinth_domain)
-  target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includes)
-  add_test(NAME ${name} COMMAND ${name})
+  labyrinth_configure_test(${name})
 endforeach()
 
 # ---- Infra tests ----
@@ -33,8 +41,7 @@ foreach(t ${INFRA_TESTS})
   get_filename_component(name "${t}" NAME_WE)
   add_executable(${name} ${t})
   target_link_libraries(${name} PRIVATE labyrinth_infra)
-  target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includes)
-  add_test(NAME ${name} COMMAND ${name})
+  labyrinth_configure_test(${name})
 endforeach()
 
 # ---- App tests ----
@@ -45,6 +52,5 @@ foreach(t ${APP_TESTS})
   get_filename_component(name "${t}" NAME_WE)
   add_executable(${name} ${t})
   target_link_libraries(${name} PRIVATE labyrinth_app)
-  target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includes)
-  add_test(NAME ${name} COMMAND ${name})
+  labyrinth_configure_test(${name})
 endforeach()

@@ -46,6 +46,11 @@ int GameLoop::run(Domain::Core::GameState &state)
         enemy_ai_system.action(state);
         combat_system.resolve(state);
 
+        if (state.victory || state.defeat) {
+            renderer_.draw(state);
+            break;
+        }
+
         for (const auto &actor : state.actors) {
             auto *enemy = dynamic_cast<Domain::Entities::Enemy *>(actor.get());
             if (enemy) {

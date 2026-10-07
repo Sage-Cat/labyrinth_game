@@ -18,7 +18,7 @@ bool Map::is_transparent(Domain::Core::Position p) const
     return !tile.blocks_sight;
 }
 
-bool Map::set_transparent(Domain::Core::Position p, bool transparent) noexcept
+bool Map::set_transparent(Domain::Core::Position p, bool transparent)
 {
     if (!in_bounds(p))
         return false;
